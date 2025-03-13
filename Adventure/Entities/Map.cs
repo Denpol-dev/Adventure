@@ -18,8 +18,7 @@ namespace Adventure.Entities
 
     public class CellType
     {
-        public string Fill { get; set; }
-        public Actor? Actor { get; set; }
-        public ConsoleColor Color { get; set; }
+        public string Fill { get; set; } = ".";
+        public Actor Actor { get; set; } = new Sand();
     }
 }

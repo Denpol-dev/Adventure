@@ -1,4 +1,6 @@
-﻿namespace Adventure.Entities.Levels
+﻿using Adventure.Entities.Maps;
+
+namespace Adventure.Entities.Levels
 {
     public class Level1_1 : Level
     {
@@ -11,7 +13,7 @@
             set => topLevel = value;
         }
 
-        private Level? bottomLevel = new Level2_1();
+        private Level? bottomLevel = null;//new Level2_1();
         public override Level? BottomLevel
         {
             get => bottomLevel;
@@ -25,37 +27,50 @@
             set => leftLevel = value;
         }
 
-        private Level? rightLevel = new Level1_2();
+        private Level? rightLevel = null;//new Level1_2();
         public override Level? RightLevel
         {
             get => rightLevel;
             set => rightLevel = value;
         }
 
+        public override ConsoleColor LevelColor { get; set; } = ConsoleColor.DarkGray;
+
         private Map map = new()
         {
-            Width = 100,
-            Height = 100,
-            Cells = GenerateMap()
+            Width = 98,
+            Height = 28,
+            Cells = GenerateMap(Sprites.Level1_1Sprite)
         };
 
-        public override Map Map
+        public override Map GetMap()
         {
-            get => map;
-            set => map = value;
+            return map;
         }
 
-        public static List<Cell> GenerateMap()
+        public override void SetMap(Map value)
         {
-            var map = new List<Cell>();
-            for (int y = 0; y < 100; y++)
-            {
-                for (int x = 0; x < 100; x++)
-                {
+            map = value;
+        }
 
+        public override void LoadMap()
+        {
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine("Сообщение: ");
+            foreach (var cell in map.Cells.Select(c => c.CellType))
+            {
+                var cellString = cell.Fill;
+                if (cellString == "I")
+                {
+                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
+                    Console.WriteLine(cell.Fill);
+                }
+                else
+                {
+                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
+                    Console.Write(cell.Fill);
                 }
             }
-            return map;
         }
     }
 }

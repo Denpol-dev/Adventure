@@ -1,8 +1,8 @@
 ﻿namespace Adventure.Entities.Actors
 {
-    public class Chest : Actor
+    public class Sand :Actor
     {
-        private string name = "Сундук";
+        private string name = "Песок";
         public override string Name
         {
             get => name;
@@ -16,11 +16,14 @@
             set => isTakeble = value;
         }
 
-        public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGreen;
+        public override ConsoleColor Color { get; set; } = ConsoleColor.DarkYellow;
 
         public override void Action()
         {
-            Console.Write("Сундук открыт");
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.SetCursorPosition(0, 0);
+            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+            Console.WriteLine("Сообщение: ");
         }
     }
 }

@@ -32,6 +32,13 @@
             set => rightLevel = value;
         }
 
+        private ConsoleColor levelColor = ConsoleColor.Gray;
+        public override ConsoleColor LevelColor
+        {
+            get => levelColor;
+            set => levelColor = value;
+        }
+
         private Map map = new()
         {
             Width = 100,
@@ -39,10 +46,14 @@
             Cells = GenerateMap()
         };
 
-        public override Map Map
+        public override Map GetMap()
         {
-            get => map;
-            set => map = value;
+            return map;
+        }
+
+        public override void SetMap(Map value)
+        {
+            map = value;
         }
 
         public static List<Cell> GenerateMap()
@@ -56,6 +67,11 @@
                 }
             }
             return map;
+        }
+
+        public override void LoadMap()
+        {
+            throw new NotImplementedException();
         }
     }
 }
