@@ -1,49 +1,25 @@
-﻿namespace Adventure.Entities.Levels
+﻿using Adventure.Entities.Maps;
+
+namespace Adventure.Entities.Levels
 {
     public class Level1_2 : Level
     {
-        public override string Name { get; set; } = "Рынок вход";
+        public Level1_2() { }
 
-        private Level? topLevel = null;
-        public override Level? TopLevel
-        {
-            get => topLevel;
-            set => topLevel = value;
-        }
+        public override string Name { get; set; } = "N23S56";
 
-        private Level? bottomLevel = null;//new Level2_2();
-        public override Level? BottomLevel
-        {
-            get => bottomLevel;
-            set => bottomLevel = value;
-        }
+        public override Level? TopLevel { get; set; }
+        public override Level? BottomLevel { get; set; }
+        public override Level? LeftLevel { get; set; }
+        public override Level? RightLevel { get; set; }
 
-        private Level? leftLevel = new Level1_1();
-        public override Level? LeftLevel
-        {
-            get => leftLevel;
-            set => leftLevel = value;
-        }
-
-        private Level? rightLevel = null;//new Level1_3();
-        public override Level? RightLevel
-        {
-            get => rightLevel;
-            set => rightLevel = value;
-        }
-
-        private ConsoleColor levelColor = ConsoleColor.Gray;
-        public override ConsoleColor LevelColor
-        {
-            get => levelColor;
-            set => levelColor = value;
-        }
+        public override ConsoleColor LevelColor { get; set; } = ConsoleColor.Black;
 
         private Map map = new()
         {
-            Width = 100,
-            Height = 40,
-            Cells = GenerateMap()
+            Width = 98,
+            Height = 30,
+            Cells = GenerateMap(Sprites.Level1_2Sprite)
         };
 
         public override Map GetMap()
@@ -56,30 +32,25 @@
             map = value;
         }
 
-        public static List<Cell> GenerateMap()
-        {
-            var map = new List<Cell>();
-            for (int y = 0; y < 40; y++)
-            {
-                for (int x = 0; x < 100; x++)
-                {
-                    map.Add(new Cell()
-                    {
-                        X = x,
-                        Y = y,
-                        CellType = new CellType()
-                        {
-
-                        }
-                    });
-                }
-            }
-            return map;
-        }
-
         public override void LoadMap()
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Квадрант " + Name);
+            Console.WriteLine("Инвентарь: ");
+            Console.WriteLine("Сообщение: ");
+            foreach (var cell in map.Cells.Select(c => c.CellType))
+            {
+                var cellString = cell.Fill;
+                if (cellString == "I")
+                {
+                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
+                    Console.WriteLine(cell.Fill);
+                }
+                else
+                {
+                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
+                    Console.Write(cell.Fill);
+                }
+            }
         }
     }
 }

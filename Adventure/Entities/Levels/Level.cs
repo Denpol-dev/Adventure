@@ -13,6 +13,17 @@ namespace Adventure.Entities.Levels
 
         public abstract ConsoleColor LevelColor { get; set; }
 
+        public void InitDirections(
+            Level? topLevel,
+            Level? bottomLevel,
+            Level? leftLevel,
+            Level? rightLevel)
+        {
+            TopLevel = topLevel;
+            BottomLevel = bottomLevel;
+            LeftLevel = leftLevel;
+            RightLevel = rightLevel;
+        }
         public abstract Map GetMap();
         public abstract void SetMap(Map value);
         public abstract void LoadMap();
@@ -23,7 +34,7 @@ namespace Adventure.Entities.Levels
             int stringIndex = 0;
             string cellString = "";
             int x = -1;
-            int y = 0;
+            int y = 2;
             while (cellString != "~")
             {
                 stringIndex++;
@@ -37,7 +48,8 @@ namespace Adventure.Entities.Levels
                     {
                         "#" => new Stone(),
                         "V" => new Bush(),
-                        _ => new Sand(),
+                        "." => new Sand(),
+                        _ => new Chest(cellString),
                     };
                     map.Add(new Cell()
                     {

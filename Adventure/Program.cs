@@ -1,6 +1,7 @@
 ﻿using Adventure.Entities.Characters;
 using Adventure.Entities.Levels;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -8,17 +9,50 @@ namespace Adventure
 {
     public class Program
     {
+        #region Import dll
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetStdHandle(int handle);
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleOutputCP(uint wCodePageID);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleCP(uint wCodePageID);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleDisplayMode(IntPtr ConsoleOutput, uint Flags, out COORD NewScreenBufferDimensions);
+        [StructLayout(LayoutKind.Sequential)]
+        public struct COORD
+        {
+            public short X;
+            public short Y;
 
-        Level Level { get; set; } = new Level1_1();
-        Character Character { get; set; } = new Character();
+            public COORD(short X, short Y)
+            {
+                this.X = X;
+                this.Y = Y;
+            }
+        }
+
+        #endregion
+
+        public Level Level { get; set; }
+        public Character Character { get; set; }
+
+        public void ChangeLevel(Level level, Character character)
+        {
+            Level = level;
+            Console.Clear();
+            Console.BackgroundColor = level.LevelColor;
+            level.LoadMap();
+            int x = character.X;
+            int y = character.Y;
+            character.SetCharacterOnMap(x, y);
+        }
 
         public static void Main()
         {
+            IntPtr hConsole = GetStdHandle(-11);
+            SetConsoleDisplayMode(hConsole, 1, out COORD b1);
             var program = new Program();
             SetConsoleOutputCP(932);
             SetConsoleCP(932);
@@ -26,11 +60,9 @@ namespace Adventure
 
             Prologue();
             Console.CursorVisible = false;
-            Console.BufferHeight = 100;
-            Console.SetWindowSize(150, 150);
             StartGame(program);
-            Game(program);
         }
+
 
         public static void Prologue()
         {
@@ -106,8 +138,35 @@ namespace Adventure
                     Loading("Переход на лазерный дальномер", true);
                     Console.WriteLine();
                     Console.WriteLine("Подключение выполнено!");
-                    Loading("Загрузка альтернативного изображения", true);
-                    Console.Clear();
+                    Thread.Sleep(50);
+                    Console.WriteLine("Установлено альтернативное управление планетарным объектом");
+                    Console.WriteLine("Команды для управления: ");
+                    Thread.Sleep(50);
+                    Console.WriteLine("W: Вверх по Y");
+                    Thread.Sleep(50);
+                    Console.WriteLine("S: Вниз по Y");
+                    Thread.Sleep(50);
+                    Console.WriteLine("A: Влево по X");
+                    Thread.Sleep(50);
+                    Console.WriteLine("D: Направо по X");
+                    Thread.Sleep(50);
+                    Console.WriteLine("E: Выполнить действие");
+                    Console.WriteLine();
+                    Console.WriteLine("Продолжить?");
+                    Console.WriteLine("y/n: ");
+                    key = Console.ReadKey();
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.White;
+                    if (key.Key.ToString() == "Y")
+                    {
+                        Loading("Загрузка альтернативного изображения", true);
+                        Console.Clear();
+                    }
+                    else
+                    {
+                        Console.WriteLine("До свидания!");
+                        Process.GetCurrentProcess().Kill();
+                    }
                 }
                 else
                 {
@@ -117,12 +176,12 @@ namespace Adventure
             }
             else
             {
-                Console.WriteLine("До свидания!"); 
+                Console.WriteLine("До свидания!");
                 Process.GetCurrentProcess().Kill();
             }
         }
 
-        public static void Loading(string message, bool isSuccess, int sleep = 300)
+        public static void Loading(string message, bool isSuccess, int sleep = 200)
         {
             var random = new Random();
             for (int x = 0; x < random.Next(1, 4); x++)
@@ -154,16 +213,18 @@ namespace Adventure
         public static void StartGame(Program program)
         {
             Console.Clear();
+
+            var levels = new InitLevels();
+
+            program.Level = levels.Level11;
             var level = program.Level;
             Console.BackgroundColor = level.LevelColor;
             level.LoadMap();
 
+            program.Character = new Character(program);
             var character = program.Character;
-            character.SetCharacterOnMap(level.GetMap());
-        }
+            character.SetCharacterOnMap();
 
-        public static void Game(Program program)
-        {
             ConsoleKeyInfo key;
             do
             {

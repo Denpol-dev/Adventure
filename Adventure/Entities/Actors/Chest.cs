@@ -1,26 +1,39 @@
-﻿namespace Adventure.Entities.Actors
+﻿using Adventure.Entities.Items;
+
+namespace Adventure.Entities.Actors
 {
     public class Chest : Actor
     {
-        private string name = "Сундук";
-        public override string Name
+        public Chest(string chest)
         {
-            get => name;
-            set => name = value;
+            switch (chest)
+            {
+                case "^":
+                    Inventory = new Key();
+                    break;
+                default:
+                    break;
+            }
         }
 
-        private bool isTakeble = false;
-        public override bool IsTakeble
-        {
-            get => isTakeble;
-            set => isTakeble = value;
-        }
-
+        public override string Name { get; set; } = "Ящик";
+        public override bool IsTakeble { get; set; } = true;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGreen;
+        public override Item? Inventory { get; set; }
 
         public override void Action()
         {
-            Console.Write("Сундук открыт");
+            Console.SetCursorPosition(MessageX, MessageY);
+            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+            string message = "Сообщение: ";
+            if (Inventory != null)
+            {
+                Console.WriteLine(message + "Ящик открыт. В нем лежало " + Inventory.Name);
+            }
+            else
+            {
+                Console.WriteLine(message + "Пустой ящик.");
+            }
         }
     }
 }

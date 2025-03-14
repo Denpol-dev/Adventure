@@ -1,27 +1,17 @@
-﻿namespace Adventure.Entities.Actors
+﻿using Adventure.Entities.Items;
+
+namespace Adventure.Entities.Actors
 {
-    public class Sand :Actor
+    public class Sand : Actor
     {
-        private string name = "Песок";
-        public override string Name
-        {
-            get => name;
-            set => name = value;
-        }
-
-        private bool isTakeble = false;
-        public override bool IsTakeble
-        {
-            get => isTakeble;
-            set => isTakeble = value;
-        }
-
+        public override string Name { get; set; } = "Песок";
+        public override bool IsTakeble { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkYellow;
+        public override Item? Inventory { get; set; }
 
         public override void Action()
         {
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.SetCursorPosition(0, 0);
+            Console.SetCursorPosition(MessageX, MessageY);
             Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
             Console.WriteLine("Сообщение: ");
         }

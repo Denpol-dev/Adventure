@@ -4,42 +4,21 @@ namespace Adventure.Entities.Levels
 {
     public class Level1_1 : Level
     {
-        public override string Name { get; set; } = "Каменная пустыня";
+        public Level1_1() { }
 
-        private Level? topLevel = null;
-        public override Level? TopLevel
-        {
-            get => topLevel;
-            set => topLevel = value;
-        }
+        public override string Name { get; set; } = "N23S55";
 
-        private Level? bottomLevel = null;//new Level2_1();
-        public override Level? BottomLevel
-        {
-            get => bottomLevel;
-            set => bottomLevel = value;
-        }
+        public override Level? TopLevel { get; set; }
+        public override Level? BottomLevel { get; set; }
+        public override Level? LeftLevel { get; set; }
+        public override Level? RightLevel { get; set; }
 
-        private Level? leftLevel = null;
-        public override Level? LeftLevel
-        {
-            get => leftLevel;
-            set => leftLevel = value;
-        }
-
-        private Level? rightLevel = null;//new Level1_2();
-        public override Level? RightLevel
-        {
-            get => rightLevel;
-            set => rightLevel = value;
-        }
-
-        public override ConsoleColor LevelColor { get; set; } = ConsoleColor.DarkGray;
+        public override ConsoleColor LevelColor { get; set; } = ConsoleColor.Black;
 
         private Map map = new()
         {
             Width = 98,
-            Height = 28,
+            Height = 30,
             Cells = GenerateMap(Sprites.Level1_1Sprite)
         };
 
@@ -55,7 +34,8 @@ namespace Adventure.Entities.Levels
 
         public override void LoadMap()
         {
-            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine("Квадрант " + Name);
+            Console.WriteLine("Инвентарь: ");
             Console.WriteLine("Сообщение: ");
             foreach (var cell in map.Cells.Select(c => c.CellType))
             {
