@@ -181,7 +181,7 @@ namespace Adventure
             }
         }
 
-        public static void Loading(string message, bool isSuccess, int sleep = 200)
+        public static void Loading(string message, bool isSuccess, int sleep = 400)
         {
             var random = new Random();
             for (int x = 0; x < random.Next(1, 4); x++)
