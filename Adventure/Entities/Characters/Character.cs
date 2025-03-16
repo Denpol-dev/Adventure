@@ -1,6 +1,7 @@
 ﻿using Adventure.Entities.Actors;
 using Adventure.Entities.Items;
 using Adventure.Entities.Levels;
+using Adventure.Entities.Maps;
 using System.Text;
 
 namespace Adventure.Entities.Characters
@@ -36,9 +37,12 @@ namespace Adventure.Entities.Characters
                 case "W":
                     if (Y > 3)
                     {
-                        EraseCharacter(map);
-                        Console.SetCursorPosition(X, --Y);
-                        DrawCharacter();
+                        if (CheckCollision(map, X, Y - 1))
+                        {
+                            EraseCharacter(map);
+                            Console.SetCursorPosition(X, --Y);
+                            DrawCharacter();
+                        }
                     }
                     else
                     {
@@ -55,9 +59,12 @@ namespace Adventure.Entities.Characters
                 case "S":
                     if (Y < map.Height)
                     {
-                        EraseCharacter(map);
-                        Console.SetCursorPosition(X, ++Y);
-                        DrawCharacter();
+                        if (CheckCollision(map, X, Y + 1))
+                        {
+                            EraseCharacter(map);
+                            Console.SetCursorPosition(X, ++Y);
+                            DrawCharacter();
+                        }
                     }
                     else
                     {
@@ -74,9 +81,12 @@ namespace Adventure.Entities.Characters
                 case "A":
                     if (X > 0)
                     {
-                        EraseCharacter(map);
-                        Console.SetCursorPosition(--X, Y);
-                        DrawCharacter();
+                        if (CheckCollision(map, X - 1, Y))
+                        {
+                            EraseCharacter(map);
+                            Console.SetCursorPosition(--X, Y);
+                            DrawCharacter();
+                        }
                     }
                     else
                     {
@@ -93,9 +103,12 @@ namespace Adventure.Entities.Characters
                 case "D":
                     if (X < map.Width)
                     {
-                        EraseCharacter(map);
-                        Console.SetCursorPosition(++X, Y);
-                        DrawCharacter();
+                        if (CheckCollision(map, X + 1, Y))
+                        {
+                            EraseCharacter(map);
+                            Console.SetCursorPosition(++X, Y);
+                            DrawCharacter();
+                        }
                     }
                     else
                     {
@@ -116,7 +129,7 @@ namespace Adventure.Entities.Characters
                     {
                         if (cell.CellType.Actor.Inventory is Item item)
                         {
-                            if (Inventory.Items.Contains(item)) 
+                            if (Inventory.Items.Contains(item))
                             {
                                 EmptyChestMessage();
                                 break;
@@ -157,9 +170,14 @@ namespace Adventure.Entities.Characters
             Inventory.Items.Add(item);
             Console.SetCursorPosition(0, 1);
 
-            var sb = new StringBuilder("Инвентарь: ");
-            Inventory.Items.ForEach(i => sb.Append(i.Name));
-            Console.WriteLine(sb.ToString());
+            var sb = new StringBuilder();
+            var inventory = Inventory.Items;
+            foreach (var i in inventory)
+            {
+                sb.Append(i.Name + ", ");
+            }
+            sb.Length -= 2;
+            Console.WriteLine("Инвентарь: " + sb.ToString());
         }
 
         private static void MaxWeightErrorMessage()
@@ -189,11 +207,17 @@ namespace Adventure.Entities.Characters
             Console.Write("X");
         }
 
+        private bool CheckCollision(Map map, int x, int y)
+        {
+            var actor = map.Cells.First(c => c.X == x && c.Y == y).CellType.Actor;
+            return !actor.IsCollision;
+        }
+
         private void EraseCharacter(Map map)
         {
             Console.SetCursorPosition(X, Y);
             var type = map.Cells.First(c => c.X == X && c.Y == Y).CellType;
-            Console.ForegroundColor = type.Actor?.Color ?? ConsoleColor.Black;
+            Console.ForegroundColor = type.Actor?.Color ?? ConsoleColor.Gray;
             Console.Write(type.Fill);
             Console.ForegroundColor = ConsoleColor.White;
         }

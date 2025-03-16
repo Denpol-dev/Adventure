@@ -1,6 +1,6 @@
 ﻿using Adventure.Entities.Actors;
 
-namespace Adventure.Entities
+namespace Adventure.Entities.Maps
 {
     public class Map
     {
@@ -19,6 +19,6 @@ namespace Adventure.Entities
     public class CellType
     {
         public string Fill { get; set; } = ".";
-        public Actor Actor { get; set; } = new Sand();
+        public Actor? Actor { get; set; }
     }
 }

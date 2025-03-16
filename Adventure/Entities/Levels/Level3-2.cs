@@ -31,26 +31,5 @@ namespace Adventure.Entities.Levels
         {
             map = value;
         }
-
-        public override void LoadMap()
-        {            
-            Console.WriteLine("Квадрант " + Name);
-            Console.WriteLine("Инвентарь: ");
-            Console.WriteLine("Сообщение: ");
-            foreach (var cell in map.Cells.Select(c => c.CellType))
-            {
-                var cellString = cell.Fill;
-                if (cellString == "I")
-                {
-                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
-                    Console.WriteLine(cell.Fill);
-                }
-                else
-                {
-                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
-                    Console.Write(cell.Fill);
-                }
-            }
-        }
     }
 }

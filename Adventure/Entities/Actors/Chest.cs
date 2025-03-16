@@ -8,8 +8,8 @@ namespace Adventure.Entities.Actors
         {
             switch (chest)
             {
-                case "^":
-                    Inventory = new Key();
+                case "▣":
+                    Inventory = new HardDriveXD23();
                     break;
                 default:
                     break;
@@ -18,6 +18,7 @@ namespace Adventure.Entities.Actors
 
         public override string Name { get; set; } = "Ящик";
         public override bool IsTakeble { get; set; } = true;
+        public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGreen;
         public override Item? Inventory { get; set; }
 
@@ -28,7 +29,7 @@ namespace Adventure.Entities.Actors
             string message = "Сообщение: ";
             if (Inventory != null)
             {
-                Console.WriteLine(message + "Ящик открыт. В нем лежало " + Inventory.Name);
+                Console.WriteLine(message + "Ящик открыт. Содержимое ящика \"" + Inventory.Name + "\" перенесено в инвентарь");
             }
             else
             {

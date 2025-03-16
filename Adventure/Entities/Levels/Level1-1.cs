@@ -1,4 +1,6 @@
-﻿using Adventure.Entities.Maps;
+﻿using Adventure.Entities.Characters;
+using Adventure.Entities.Maps;
+using System.Text;
 
 namespace Adventure.Entities.Levels
 {
@@ -30,27 +32,6 @@ namespace Adventure.Entities.Levels
         public override void SetMap(Map value)
         {
             map = value;
-        }
-
-        public override void LoadMap()
-        {
-            Console.WriteLine("Квадрант " + Name);
-            Console.WriteLine("Инвентарь: ");
-            Console.WriteLine("Сообщение: ");
-            foreach (var cell in map.Cells.Select(c => c.CellType))
-            {
-                var cellString = cell.Fill;
-                if (cellString == "I")
-                {
-                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
-                    Console.WriteLine(cell.Fill);
-                }
-                else
-                {
-                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Black;
-                    Console.Write(cell.Fill);
-                }
-            }
         }
     }
 }

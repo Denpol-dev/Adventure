@@ -6,6 +6,7 @@ namespace Adventure.Entities.Actors
     {
         public override string Name { get; set; } = "Сухой кустарник";
         public override bool IsTakeble { get; set; } = false;
+        public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkYellow;
         public override Item? Inventory { get; set; }
 
@@ -15,7 +16,7 @@ namespace Adventure.Entities.Actors
             Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
             Random random = new();
             string message = "Сообщение: ";
-            switch (random.Next(1, 5))
+            switch (random.Next(0, 5))
             {
                 case 0:
                     Console.WriteLine(message + "Кустарник.");

@@ -1,4 +1,7 @@
 ﻿using Adventure.Entities.Actors;
+using Adventure.Entities.Characters;
+using Adventure.Entities.Maps;
+using System.Text;
 
 namespace Adventure.Entities.Levels
 {
@@ -26,7 +29,50 @@ namespace Adventure.Entities.Levels
         }
         public abstract Map GetMap();
         public abstract void SetMap(Map value);
-        public abstract void LoadMap();
+
+        public void LoadMap(Character character)
+        {
+            var map = GetMap();
+            Console.WriteLine("Квадрант " + Name);
+            LoadInventory(character);
+            Console.WriteLine("Сообщение: ");
+            foreach (var cell in map.Cells.Select(c => c.CellType))
+            {
+                var cellString = cell.Fill;
+                if (cellString == "I")
+                {
+                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Gray;
+                    Console.WriteLine(cell.Fill);
+                }
+                else
+                {
+                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Gray;
+                    Console.Write(cell.Fill);
+                }
+            }
+        }
+
+        public static void LoadInventory(Character character)
+        {
+            if (character != null)
+            {
+                var sb = new StringBuilder();
+                var inventory = character.Inventory.Items;
+                if (inventory.Count > 0) {
+
+                    foreach (var item in inventory)
+                    {
+                        sb.Append(item.Name + ", ");
+                    }
+                    sb.Length -= 2;
+                    Console.WriteLine("Инвентарь: " + sb.ToString());
+                }
+                else
+                {
+                    Console.WriteLine("Инвентарь: ");
+                }
+            }
+        }
 
         public static List<Cell> GenerateMap(string sprite)
         {
@@ -46,9 +92,17 @@ namespace Adventure.Entities.Levels
                     cellString = sprite[stringIndex].ToString();
                     Actor? actor = cellString switch
                     {
+                        "I" => null,
+                        "_" => null,
+                        "~" => null,
                         "#" => new Stone(),
                         "V" => new Bush(),
                         "." => new Sand(),
+                        "+" => new WallCorner(),
+                        "-" => new WallHorizontal(),
+                        "|" => new WallVertical(),
+                        "▢" => new BunkerFloor(),
+                        "©" => new Sign("Бункер HZ44B"),
                         _ => new Chest(cellString),
                     };
                     map.Add(new Cell()

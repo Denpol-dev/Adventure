@@ -8,6 +8,7 @@ namespace Adventure.Entities.Actors
         public const int MessageY = 2;
         public abstract string Name { get; set; }
         public abstract bool IsTakeble { get; set; }
+        public abstract bool IsCollision { get; set; }
         public abstract ConsoleColor Color { get; set; }
         public abstract Item? Inventory { get; set; }
         public abstract void Action();

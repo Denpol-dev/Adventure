@@ -2,9 +2,9 @@
 
 namespace Adventure.Entities.Actors
 {
-    public class Stone : Actor
+    public class BunkerFloor : Actor
     {
-        public override string Name { get; set; } = "Камень";
+        public override string Name { get; set; } = "Пол бункера";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGray;
@@ -19,25 +19,25 @@ namespace Adventure.Entities.Actors
             switch (random.Next(0, 5))
             {
                 case 0:
-                    Console.WriteLine(message + "Это камень.");
+                    Console.WriteLine(message + "Пол бункера.");
                     break;
                 case 1:
-                    Console.WriteLine(message + "Просто камень.");
+                    Console.WriteLine(message + "Бетон.");
                     break;
                 case 2:
-                    Console.WriteLine(message + "Булыжник.");
+                    Console.WriteLine(message + "Бетонный пол.");
                     break;
                 case 3:
-                    Console.WriteLine(message + "Серый камень.");
+                    Console.WriteLine(message + "Серый бетон.");
                     break;
                 case 4:
-                    Console.WriteLine(message + "Сборище минералов.");
+                    Console.WriteLine(message + "Старый бетонный пол.");
                     break;
                 case 5:
-                    Console.WriteLine(message + "Это же... А, нет, просто камень.");
+                    Console.WriteLine(message + "Хм, что-то странное... А, нет, показалось. Просто трещина на полу.");
                     break;
                 default:
-                    Console.WriteLine(message + "Камень.");
+                    Console.WriteLine(message + "Бункерный пол.");
                     break;
             }
         }
