@@ -102,8 +102,17 @@ namespace Adventure.Entities.Levels
                         "-" => new WallHorizontal(),
                         "|" => new WallVertical(),
                         "▢" => new BunkerFloor(),
-                        "©" => new Sign("Бункер HZ44B"),
-                        _ => new Chest(cellString),
+                        "8" => new Rock(),
+                        "≈" => new ForceField(cellString),
+
+                        "©" => new Sign(cellString),
+
+                        "¶" => new Terminal(cellString),
+
+                        "▣" => new Chest(cellString),
+                        "◊" => new Chest(cellString),
+                        "◬" => new Chest(cellString),
+                        _ => new Sand()
                     };
                     map.Add(new Cell()
                     {

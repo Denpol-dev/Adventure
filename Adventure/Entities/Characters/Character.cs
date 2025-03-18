@@ -48,7 +48,7 @@ namespace Adventure.Entities.Characters
                     {
                         if (_program.Level.TopLevel is Level level)
                         {
-                            _program.ChangeLevel(level, this);
+                            _program.ChangeLevel(level, this, Vector.Top);
                         }
                         else
                         {
@@ -70,7 +70,7 @@ namespace Adventure.Entities.Characters
                     {
                         if (_program.Level.BottomLevel is Level level)
                         {
-                            _program.ChangeLevel(level, this);
+                            _program.ChangeLevel(level, this, Vector.Bottom);
                         }
                         else
                         {
@@ -92,7 +92,7 @@ namespace Adventure.Entities.Characters
                     {
                         if (_program.Level.LeftLevel is Level level)
                         {
-                            _program.ChangeLevel(level, this);
+                            _program.ChangeLevel(level, this, Vector.Left);
                         }
                         else
                         {
@@ -114,7 +114,7 @@ namespace Adventure.Entities.Characters
                     {
                         if (_program.Level.RightLevel is Level level)
                         {
-                            _program.ChangeLevel(level, this);
+                            _program.ChangeLevel(level, this, Vector.Right);
                         }
                         else
                         {
@@ -125,7 +125,7 @@ namespace Adventure.Entities.Characters
                 case "E":
                     cell = map.Cells.First(c => c.X == X && c.Y == Y);
 
-                    if (cell.CellType.Actor.IsTakeble)
+                    if (cell.CellType.Actor?.IsTakeble ?? false)
                     {
                         if (cell.CellType.Actor.Inventory is Item item)
                         {
@@ -148,7 +148,7 @@ namespace Adventure.Entities.Characters
                     }
                     else
                     {
-                        cell.CellType.Actor.Action();
+                        cell.CellType.Actor?.Action();
                     }
                     break;
                 default:
@@ -209,8 +209,36 @@ namespace Adventure.Entities.Characters
 
         private bool CheckCollision(Map map, int x, int y)
         {
-            var actor = map.Cells.First(c => c.X == x && c.Y == y).CellType.Actor;
-            return !actor.IsCollision;
+            var cellType = map.Cells.First(c => c.X == x && c.Y == y).CellType;
+            var actor = cellType.Actor;
+
+            if (actor is ForceField field)
+            {
+                if (CheckInventory(field.Pass))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return !actor?.IsCollision ?? false;
+            }
+        }
+
+        private bool CheckInventory(Item checkItem)
+        {
+            foreach (var item in Inventory.Items)
+            {
+                if (checkItem.GetType() == item.GetType())
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void EraseCharacter(Map map)

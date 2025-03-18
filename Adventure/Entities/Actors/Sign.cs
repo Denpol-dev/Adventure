@@ -4,9 +4,14 @@ namespace Adventure.Entities.Actors
 {
     public class Sign : Actor
     {
-        public Sign(string inscription)
+        public Sign(string sign)
         {
-            Inscription = inscription;
+            string message = "На табличке написано: ";
+            Inscription = sign switch
+            {
+                "©" => message + "Бункер HZ44B",
+                _ => "Нечитабельная надпись",
+            };
         }
 
         public override string Name { get; set; } = "Табличка";
@@ -15,14 +20,13 @@ namespace Adventure.Entities.Actors
         public override ConsoleColor Color { get; set; } = ConsoleColor.Green;
         public override Item? Inventory { get; set; } = null;
 
-        public string Inscription { get; set; } = "";
+        public string Inscription { get; set; }
 
         public override void Action()
         {
             Console.SetCursorPosition(0, 2);
             Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
-            string message = "Сообщение: ";
-            Console.Write(message + "На табличке написано: " + Inscription);
+            Console.Write(Inscription);
         }
     }
 }

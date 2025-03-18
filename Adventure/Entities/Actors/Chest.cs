@@ -11,6 +11,12 @@ namespace Adventure.Entities.Actors
                 case "▣":
                     Inventory = new HardDriveXD23();
                     break;
+                case "◊":
+                    Inventory = new ArtifactY66();
+                    break;
+                case "◬":
+                    Inventory = new HardDriveXD23Full();
+                    break;
                 default:
                     break;
             }

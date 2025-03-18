@@ -17,6 +17,14 @@ namespace Adventure
                 Console.WriteLine("フォックスネットワーク社の長距離通信システムへようこそ!");
                 Loading("言語パックを読み込んでいます", true, 100);
                 Loading("ネイティブスピーカーの言語を判定します", true, 100);
+                Console.WriteLine("あなたの言語はロシア語ですか?");
+                Console.WriteLine("y/n: ");
+                var key = Console.ReadKey();
+                if (key.Key.ToString() != "Y")
+                {
+                    Console.WriteLine("さようなら！");
+                    Process.GetCurrentProcess().Kill();
+                }
                 Loading("母国語への翻訳が進行中です", true, 100);
 
                 Console.Clear();
@@ -27,7 +35,7 @@ namespace Adventure
                 Console.WriteLine("Вас приветствует Система Дальней Связи компании FoxNet.");
                 Console.WriteLine("Вы желаете подключиться к последнему выбранному планетарному объекту?");
                 Console.WriteLine("y/n: ");
-                var key = Console.ReadKey();
+                key = Console.ReadKey();
                 if (key.Key.ToString() == "Y")
                 {
                     Console.Write(new string(' ', Console.WindowWidth));
@@ -93,7 +101,10 @@ namespace Adventure
                         Console.WriteLine("D: Направо по X");
                         Thread.Sleep(50);
                         Console.WriteLine("E: Выполнить действие");
+                        Thread.Sleep(50);
                         Console.WriteLine();
+                        Console.WriteLine("Для комфортной работы рекомендуется переключить терминал в режим полного экрана.");
+                        Thread.Sleep(50);
                         Console.WriteLine("Продолжить?");
                         Console.WriteLine("y/n: ");
                         key = Console.ReadKey();

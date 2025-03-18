@@ -14,9 +14,9 @@ namespace Adventure
             program.Level = levels.Level11;
             var level = program.Level;
             Console.BackgroundColor = level.LevelColor;
+            program.Character = new Character(program);
             level.LoadMap(program.Character);
 
-            program.Character = new Character(program);
             var character = program.Character;
             character.SetCharacterOnMap();
 
