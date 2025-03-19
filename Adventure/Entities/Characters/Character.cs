@@ -123,37 +123,111 @@ namespace Adventure.Entities.Characters
                     }
                     break;
                 case "E":
-                    cell = map.Cells.First(c => c.X == X && c.Y == Y);
-
-                    if (cell.CellType.Actor?.IsTakeble ?? false)
                     {
-                        if (cell.CellType.Actor.Inventory is Item item)
+                        cell = map.Cells.First(c => c.X == X && c.Y == Y);
+
+                        if (cell.CellType.Actor is Terminal terminal)
                         {
-                            if (Inventory.Items.Contains(item))
+                            if (terminal.LoadItem is Item itemLoad)
                             {
-                                EmptyChestMessage();
-                                break;
-                            }
-                            if ((Inventory.Items.Select(i => i.Weight).Sum() + item.Weight) > MaxWeight)
-                            {
-                                MaxWeightErrorMessage();
+                                if (itemLoad is HardDriveXD23Full hdd)
+                                {
+                                    if (Inventory.Items.Select(i => i.Name).Contains(hdd.Name))
+                                    {
+                                        DeleteItemFromInventory(hdd);
+                                        AddItemToInventory(new HardDriveXD23());
+                                        cell.CellType.Actor.Action();
+                                        FinalMessage(map);
+                                    }
+                                }
+                                else
+                                {
+                                    if (Inventory.Items.Select(i => i.Name).Contains(itemLoad.Name))
+                                    {
+                                        if (cell.CellType.Actor.Inventory is Item item)
+                                        {
+                                            cell.CellType.Actor.Action();
+                                            DeleteItemFromInventory(itemLoad);
+                                            AddItemToInventory(item);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (terminal.Inventory is Item item)
+                                        {
+                                            if (Inventory.Items.Select(i => i.Name).Contains(item.Name))
+                                            {
+                                                TerminalErrorMessage();
+                                            }
+                                            else
+                                            {
+                                                LoadErrorMessage();
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             else
                             {
-                                AddItemToInventory(item);
                                 cell.CellType.Actor.Action();
                             }
-                            break;
                         }
+                        else
+                        {
+                            if (cell.CellType.Actor?.IsTakeble ?? false)
+                            {
+                                if (cell.CellType.Actor.Inventory is Item item)
+                                {
+                                    if (Inventory.Items.Contains(item))
+                                    {
+                                        EmptyChestMessage();
+                                        break;
+                                    }
+                                    if ((Inventory.Items.Select(i => i.Weight).Sum() + item.Weight) > MaxWeight)
+                                    {
+                                        MaxWeightErrorMessage();
+                                    }
+                                    else
+                                    {
+                                        AddItemToInventory(item);
+                                        cell.CellType.Actor.Action();
+                                    }
+                                    break;
+                                }
+                                else
+                                {
+                                    cell.CellType.Actor?.Action();
+                                }
+                            }
+                            else
+                            {
+                                cell.CellType.Actor?.Action();
+                            }
+                        }
+
+                        break;
                     }
-                    else
-                    {
-                        cell.CellType.Actor?.Action();
-                    }
-                    break;
                 default:
                     break;
             }
+        }
+
+        private static void LoadErrorMessage()
+        {
+            Console.SetCursorPosition(Actor.MessageX, Actor.MessageY);
+            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+
+            string message = "Сообщение: ";
+            Console.WriteLine(message + "Невозможно считать данные. Нет подходящего носителя.");
+        }
+
+        private static void TerminalErrorMessage()
+        {
+            Console.SetCursorPosition(Actor.MessageX, Actor.MessageY);
+            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+
+            string message = "Сообщение: ";
+            Console.WriteLine(message + "Терминал отключен");
         }
 
         private static void EmptyChestMessage()
@@ -169,6 +243,7 @@ namespace Adventure.Entities.Characters
         {
             Inventory.Items.Add(item);
             Console.SetCursorPosition(0, 1);
+            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
 
             var sb = new StringBuilder();
             var inventory = Inventory.Items;
@@ -178,6 +253,11 @@ namespace Adventure.Entities.Characters
             }
             sb.Length -= 2;
             Console.WriteLine("Инвентарь: " + sb.ToString());
+        }
+
+        private void DeleteItemFromInventory(Item item)
+        {
+            Inventory.Items.RemoveAll(i => i.Name == item.Name);
         }
 
         private static void MaxWeightErrorMessage()
@@ -200,11 +280,6 @@ namespace Adventure.Entities.Characters
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(message + "Передвижение по заданным координатам запрещено; Соединение будет потеряно.");
             Console.ForegroundColor = ConsoleColor.White;
-        }
-
-        private static void DrawCharacter()
-        {
-            Console.Write("X");
         }
 
         private bool CheckCollision(Map map, int x, int y)
@@ -239,6 +314,35 @@ namespace Adventure.Entities.Characters
                 }
             }
             return false;
+        }
+
+        private void FinalMessage(Map map)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) - 4);
+            Console.Write("+--------------------------------------+");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) - 3);
+            Console.Write("|-------------ПОЗДРАВЛЯЮ!--------------|");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) - 2);
+            Console.Write("|-----------ВЫ ПРОШЛИ ИГРУ!------------|");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) - 1);
+            Console.Write("|-ВЫ МОЖЕТЕ ИССЛЕДОВАТЬ КАРТУ ЕЩЕ РАЗ,-|");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2));
+            Console.Write("|-------ЛИБО СРАЗУ ЗАКРЫТЬ ИГРУ.-------|");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) + 1);
+            Console.Write("|---СПАСИБО, ЧТО ИГРАЛИ В МОЮ ИГРУ!----|");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) + 2);
+            Console.Write("|-----ВАШ ДЕНИС KOTONETR ПОЛУРОТОВ-----|");
+            Console.SetCursorPosition((map.Width / 2) - 20, (map.Height / 2) + 3);
+            Console.Write("+--------------------------------------+");
+
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        private static void DrawCharacter()
+        {
+            Console.Write("X");
         }
 
         private void EraseCharacter(Map map)

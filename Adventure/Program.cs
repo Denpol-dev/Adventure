@@ -63,7 +63,7 @@ namespace Adventure
             SetConsoleCP(932);
             Console.OutputEncoding = Encoding.Unicode;
 
-            Prologue.PrologueStart(true);
+            Prologue.PrologueStart(true, true);
             Console.CursorVisible = false;
             Game.StartGame(program);
         }

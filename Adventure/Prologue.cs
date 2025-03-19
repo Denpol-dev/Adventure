@@ -4,10 +4,19 @@ namespace Adventure
 {
     public static class Prologue
     {
-        public static void PrologueStart(bool start)
+        public static void PrologueStart(bool start, bool realise)
         {
             if (start)
             {
+                int sleep;
+                if (realise)
+                {
+                    sleep = 300;
+                }
+                else
+                {
+                    sleep = 1;
+                }
                 string FoxNetLogo = "███████╗ ██████╗ ██╗  ██╗███╗   ██╗███████╗████████╗\r\n██╔════╝██╔═══██╗╚██╗██╔╝████╗  ██║██╔════╝╚══██╔══╝\r\n█████╗  ██║   ██║ ╚███╔╝ ██╔██╗ ██║█████╗     ██║   \r\n██╔══╝  ██║   ██║ ██╔██╗ ██║╚██╗██║██╔══╝     ██║   \r\n██║     ╚██████╔╝██╔╝ ██╗██║ ╚████║███████╗   ██║   \r\n╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ";
                 string FoxNetJapLogo = "           .       .                   .       .      .     .      .\r\n          .    .         .    .            .     ______\r\n      .           .             .               ////////\r\n                .    .   ________   .  .      /////////     .    .\r\n           .            |.____.  /\\        ./////////    .\r\n    .                 .//      \\/  |\\     /////////\r\n       .       .    .//          \\ |  \\ /////////       .     .   .\r\n                    ||フォックスネット|///////// .     .\r\n     .    .         ||           | |//`,/////                .\r\n             .       \\\\        ./ //  /  \\/   .\r\n  .                    \\\\.___./ //\\` '   ,_\\     .     .\r\n          .           .     \\ //////\\ , /   \\                 .    .\r\n                       .    ///////// \\|  '  |    .\r\n      .        .          ///////// .   \\ _ /          .\r\n                        /////////                              .\r\n                 .   ./////////     .     .\r\n         .           --------   .                  ..             .\r\n  .               .        .         .                       .\r\n                        ________________________\r\n____________------------                        -------------_________";
 
@@ -39,42 +48,42 @@ namespace Adventure
                 if (key.Key.ToString() == "Y")
                 {
                     Console.Write(new string(' ', Console.WindowWidth));
-                    Loading("Активация узла дальней связи", true);
-                    Loading("Подключение к спутнику N910VT", true);
-                    Loading("Проверка состояния", false);
+                    Loading("Активация узла дальней связи", true, sleep);
+                    Loading("Подключение к спутнику N910VT", true, sleep);
+                    Loading("Проверка состояния", false, sleep);
                     Console.WriteLine("Выявлены многочисленные ошибки. Общее состояние спутника оценивается в 63%. Начинается проверка всех систем.");
 
-                    Loading("   Проверка блока питания и солнечных панелей", true);
-                    Loading("   Проверка маневровых двигателей", false);
-                    Loading("   Проверка передающего устройства", true);
-                    Loading("   Проверка систем управления планетарным объектом", true);
-                    Loading("   Проверка систем слежения", false);
+                    Loading("   Проверка блока питания и солнечных панелей", true, sleep);
+                    Loading("   Проверка маневровых двигателей", false, sleep);
+                    Loading("   Проверка передающего устройства", true, sleep);
+                    Loading("   Проверка систем управления планетарным объектом", true, sleep);
+                    Loading("   Проверка систем слежения", false, sleep);
 
-                    Loading("   Проверка оптических систем", false);
+                    Loading("   Проверка оптических систем", false, sleep);
                     Console.WriteLine("      Выявлены ошибки в центральном узле оптической системе спутника...");
 
-                    Loading("      Попытка исправления ошибок", false);
+                    Loading("      Попытка исправления ошибок", false, sleep);
 
                     Console.WriteLine("   Переход на резервные системы.");
                     Console.WriteLine();
 
                     Console.WriteLine("   Проверка тепловизионных систем");
-                    Loading("      Проверка центрального узла", true);
-                    Loading("      Проверка тепловизора", false);
+                    Loading("      Проверка центрального узла", true, sleep);
+                    Loading("      Проверка тепловизора", false, sleep);
                     Console.WriteLine();
 
                     Console.WriteLine("   Проверка радиолокационных систем");
-                    Loading("      Проверка центрального узла", true);
-                    Loading("      Проверка передатчика", true);
-                    Loading("      Проверка антенны", false);
+                    Loading("      Проверка центрального узла", true, sleep);
+                    Loading("      Проверка передатчика", true, sleep);
+                    Loading("      Проверка антенны", false, sleep);
                     Console.WriteLine();
 
                     Console.WriteLine("   Проверка систем лазерного дальномера");
-                    Loading("      Проверка центрального узла", true);
-                    Loading("      Проверка импульсного лазера", true);
-                    Loading("      Проверка детектора излучения", true);
-                    Loading("      Тестовый запуск", true);
-                    Loading("      Попытка переориентации лазерного дальномера на задачи слежения", true);
+                    Loading("      Проверка центрального узла", true, sleep);
+                    Loading("      Проверка импульсного лазера", true, sleep);
+                    Loading("      Проверка детектора излучения", true, sleep);
+                    Loading("      Тестовый запуск", true, sleep);
+                    Loading("      Попытка переориентации лазерного дальномера на задачи слежения", true, sleep);
 
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("ВНИМАНИЕ! WARNING! 注意!");
@@ -85,7 +94,7 @@ namespace Adventure
                     Console.ForegroundColor = ConsoleColor.White;
                     if (key.Key.ToString() == "Y")
                     {
-                        Loading("Переход на лазерный дальномер", true);
+                        Loading("Переход на лазерный дальномер", true, sleep);
                         Console.WriteLine();
                         Console.WriteLine("Подключение выполнено!");
                         Thread.Sleep(50);
@@ -112,7 +121,7 @@ namespace Adventure
                         Console.ForegroundColor = ConsoleColor.White;
                         if (key.Key.ToString() == "Y")
                         {
-                            Loading("Загрузка альтернативного изображения", true);
+                            Loading("Загрузка альтернативного изображения", true, sleep);
                             Console.Clear();
                         }
                         else
@@ -135,7 +144,7 @@ namespace Adventure
             }
         }
 
-        public static void Loading(string message, bool isSuccess, int sleep = 40)
+        public static void Loading(string message, bool isSuccess, int sleep)
         {
             var random = new Random();
             for (int x = 0; x < random.Next(1, 4); x++)

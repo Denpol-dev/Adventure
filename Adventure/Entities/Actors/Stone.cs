@@ -5,6 +5,7 @@ namespace Adventure.Entities.Actors
     public class Stone : Actor
     {
         public override string Name { get; set; } = "Камень";
+        public override string Icon { get; set; } = "#";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGray;

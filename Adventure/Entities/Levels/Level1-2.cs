@@ -1,5 +1,4 @@
-﻿using Adventure.Entities.Characters;
-using Adventure.Entities.Maps;
+﻿using Adventure.Entities.Maps;
 
 namespace Adventure.Entities.Levels
 {

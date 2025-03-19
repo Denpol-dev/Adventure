@@ -2,10 +2,10 @@
 
 namespace Adventure.Entities.Actors
 {
-    public class Rock : Actor
+    public class Table : Actor
     {
-        public override string Name { get; set; } = "Скала";
-        public override string Icon { get; set; } = "8";
+        public override string Name { get; set; } = "Стол";
+        public override string Icon { get; set; } = "▮";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = true;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGray;

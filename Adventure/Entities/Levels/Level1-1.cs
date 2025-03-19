@@ -1,6 +1,4 @@
-﻿using Adventure.Entities.Characters;
-using Adventure.Entities.Maps;
-using System.Text;
+﻿using Adventure.Entities.Maps;
 
 namespace Adventure.Entities.Levels
 {

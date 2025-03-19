@@ -5,6 +5,7 @@ namespace Adventure.Entities.Actors
     public class WallCorner : Actor
     {
         public override string Name { get; set; } = "Угловая стена";
+        public override string Icon { get; set; } = "+";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = true;
         public override ConsoleColor Color { get; set; } = ConsoleColor.Gray;

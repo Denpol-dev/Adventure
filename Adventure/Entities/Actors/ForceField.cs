@@ -6,17 +6,28 @@ namespace Adventure.Entities.Actors
     {
         public ForceField(string field)
         {
-            Pass = field switch
+            switch (field)
             {
-                "≈" => new ArtifactY66(),
-                _ => new Key(),
-            };
+                case "≈":
+                    Pass = new ArtifactY66();
+                    Color = ConsoleColor.Blue;
+                    break;
+                case "*":
+                    Pass = new UniversalPass();
+                    Color = ConsoleColor.Red;
+                    break;
+                default:
+                    Pass = new Key();
+                    break;
+            }
+
         }
 
         public override string Name { get; set; } = "Силовое поле";
+        public override string Icon { get; set; } = "≈";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = true;
-        public override ConsoleColor Color { get; set; } = ConsoleColor.Gray;
+        public override ConsoleColor Color { get; set; } = ConsoleColor.White;
         public override Item? Inventory { get; set; } = null;
         public Item Pass { get; set; }
 

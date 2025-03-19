@@ -58,7 +58,8 @@ namespace Adventure.Entities.Levels
             {
                 var sb = new StringBuilder();
                 var inventory = character.Inventory.Items;
-                if (inventory.Count > 0) {
+                if (inventory.Count > 0)
+                {
 
                     foreach (var item in inventory)
                     {
@@ -74,12 +75,13 @@ namespace Adventure.Entities.Levels
             }
         }
 
-        public static List<Cell> GenerateMap(string sprite)
+        public static List<Cell> GenerateMap(string rawSprite)
         {
+            string sprite = rawSprite.Replace("\r", "").Replace("\n", "");
             var map = new List<Cell>();
             int stringIndex = 0;
             string cellString = "";
-            int x = -1;
+            int x;
             int y = 2;
             while (cellString != "~")
             {
@@ -101,18 +103,35 @@ namespace Adventure.Entities.Levels
                         "+" => new WallCorner(),
                         "-" => new WallHorizontal(),
                         "|" => new WallVertical(),
+                        "/" => new WallObliqueRight(),
+                        @"\"=> new WallObliqueLeft(),
                         "▢" => new BunkerFloor(),
                         "8" => new Rock(),
                         "≈" => new ForceField(cellString),
+                        "*" => new ForceField(cellString),
+                        "▧" => new AlienFloor(),
+                        "▮" => new Table(),
+                        "□" => new CarFloor(),
 
                         "©" => new Sign(cellString),
 
-                        "¶" => new Terminal(cellString),
+                        "1" => new Terminal(cellString),
+                        "2" => new Terminal(cellString),
+                        "3" => new Terminal(cellString),
+                        "4" => new Terminal(cellString),
+                        "5" => new Terminal(cellString),
+                        "6" => new Terminal(cellString),
+                        "7" => new Terminal(cellString),
+                        "9" => new Terminal(cellString),
+                        "0" => new Terminal(cellString),
+                        "◬" => new Terminal(cellString),
+                        "◮" => new Terminal(cellString),
 
                         "▣" => new Chest(cellString),
                         "◊" => new Chest(cellString),
-                        "◬" => new Chest(cellString),
-                        _ => new Sand()
+                        ";" => new Chest(cellString),
+                        "e" => new Chest(cellString),
+                        _ => null
                     };
                     map.Add(new Cell()
                     {
@@ -120,7 +139,7 @@ namespace Adventure.Entities.Levels
                         Y = y,
                         CellType = new CellType()
                         {
-                            Fill = cellString,
+                            Fill = actor?.Icon ?? cellString,
                             Actor = actor
                         }
                     });

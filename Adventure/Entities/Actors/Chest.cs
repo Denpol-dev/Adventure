@@ -14,15 +14,17 @@ namespace Adventure.Entities.Actors
                 case "◊":
                     Inventory = new ArtifactY66();
                     break;
-                case "◬":
-                    Inventory = new HardDriveXD23Full();
+                case ";":
+                    Inventory = new UniversalPass();
                     break;
                 default:
+                    Inventory = null;
                     break;
             }
         }
 
         public override string Name { get; set; } = "Ящик";
+        public override string Icon { get; set; } = "▣";
         public override bool IsTakeble { get; set; } = true;
         public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGreen;

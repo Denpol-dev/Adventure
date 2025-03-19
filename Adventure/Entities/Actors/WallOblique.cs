@@ -1,0 +1,28 @@
+﻿using Adventure.Entities.Items;
+
+namespace Adventure.Entities.Actors
+{
+    public class WallObliqueRight : Actor
+    {
+        public override string Name { get; set; } = "Косая стена (правая)";
+        public override string Icon { get; set; } = "/";
+        public override bool IsTakeble { get; set; } = false;
+        public override bool IsCollision { get; set; } = true;
+        public override ConsoleColor Color { get; set; } = ConsoleColor.Gray;
+        public override Item? Inventory { get; set; } = null;
+
+        public override void Action() { }
+    }
+
+    public class WallObliqueLeft : Actor
+    {
+        public override string Name { get; set; } = "Косая стена (левая)";
+        public override string Icon { get; set; } = @"\";
+        public override bool IsTakeble { get; set; } = false;
+        public override bool IsCollision { get; set; } = true;
+        public override ConsoleColor Color { get; set; } = ConsoleColor.Gray;
+        public override Item? Inventory { get; set; } = null;
+
+        public override void Action() { }
+    }
+}

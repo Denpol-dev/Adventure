@@ -5,6 +5,7 @@ namespace Adventure.Entities.Actors
     public class Bush : Actor
     {
         public override string Name { get; set; } = "Сухой кустарник";
+        public override string Icon { get; set; } = "V";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkYellow;

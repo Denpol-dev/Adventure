@@ -2,10 +2,10 @@
 
 namespace Adventure.Entities.Actors
 {
-    public class BunkerFloor : Actor
+    public class AlienFloor : Actor
     {
-        public override string Name { get; set; } = "Пол бункера";
-        public override string Icon { get; set; } = "▢";
+        public override string Name { get; set; } = "Инопланетный пол";
+        public override string Icon { get; set; } = "▧";
         public override bool IsTakeble { get; set; } = false;
         public override bool IsCollision { get; set; } = false;
         public override ConsoleColor Color { get; set; } = ConsoleColor.DarkGray;
@@ -20,25 +20,25 @@ namespace Adventure.Entities.Actors
             switch (random.Next(0, 5))
             {
                 case 0:
-                    Console.WriteLine(message + "Пол бункера.");
+                    Console.WriteLine(message + "Инопланетный пол.");
                     break;
                 case 1:
-                    Console.WriteLine(message + "Бетон.");
+                    Console.WriteLine(message + "Странный материал.");
                     break;
                 case 2:
-                    Console.WriteLine(message + "Бетонный пол.");
+                    Console.WriteLine(message + "Кажется, он немного пружинит.");
                     break;
                 case 3:
-                    Console.WriteLine(message + "Серый бетон.");
+                    Console.WriteLine(message + "Очень прочный камень. Или металл. Непонятно.");
                     break;
                 case 4:
-                    Console.WriteLine(message + "Старый бетонный пол.");
+                    Console.WriteLine(message + "Пол покрыт пылью, но на нем ни трещинки.");
                     break;
                 case 5:
-                    Console.WriteLine(message + "Хм, что-то странное... А, нет, показалось. Просто трещина на полу.");
+                    Console.WriteLine(message + "Древний инопланетный пол");
                     break;
                 default:
-                    Console.WriteLine(message + "Бункерный пол.");
+                    Console.WriteLine(message + "Инопланетный пол.");
                     break;
             }
         }
