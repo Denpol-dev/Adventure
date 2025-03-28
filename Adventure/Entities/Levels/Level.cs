@@ -5,16 +5,27 @@ using System.Text;
 
 namespace Adventure.Entities.Levels
 {
-    public abstract class Level
+    public class Level
     {
-        public abstract string Name { get; set; }
+        public Guid LevelId { get; set; }
+        public string Name { get; set; }
 
-        public abstract Level? TopLevel { get; set; }
-        public abstract Level? BottomLevel { get; set; }
-        public abstract Level? LeftLevel { get; set; }
-        public abstract Level? RightLevel { get; set; }
+        public int GlobalX { get; set; }
+        public int GlobalY { get; set; }
 
-        public abstract ConsoleColor LevelColor { get; set; }
+        public Guid? TopLevelId { get; set; }
+        public Level? TopLevel { get; set; }
+        public Guid? BottomLevelId { get; set; }
+        public Level? BottomLevel { get; set; }
+        public Guid? LeftLevelId { get; set; }
+        public Level? LeftLevel { get; set; }
+        public Guid? RightLevelId { get; set; }
+        public Level? RightLevel { get; set; }
+
+        public ConsoleColor LevelColor { get; set; }
+
+        public Guid MapId { get; set; }
+        public Map Map { get; set; }
 
         public void InitDirections(
             Level? topLevel,
@@ -27,12 +38,10 @@ namespace Adventure.Entities.Levels
             LeftLevel = leftLevel;
             RightLevel = rightLevel;
         }
-        public abstract Map GetMap();
-        public abstract void SetMap(Map value);
 
         public void LoadMap(Character character)
         {
-            var map = GetMap();
+            var map = Map;
             Console.WriteLine("Квадрант " + Name);
             LoadInventory(character);
             Console.WriteLine("Сообщение: ");
@@ -75,9 +84,9 @@ namespace Adventure.Entities.Levels
             }
         }
 
-        public static List<Cell> GenerateMap(string rawSprite)
+        public void GenerateMap()
         {
-            string sprite = rawSprite.Replace("\r", "").Replace("\n", "");
+            string sprite = Map.Sprite.Replace("\r", "").Replace("\n", "");
             var map = new List<Cell>();
             int stringIndex = 0;
             string cellString = "";
@@ -104,7 +113,7 @@ namespace Adventure.Entities.Levels
                         "-" => new WallHorizontal(),
                         "|" => new WallVertical(),
                         "/" => new WallObliqueRight(),
-                        @"\"=> new WallObliqueLeft(),
+                        @"\" => new WallObliqueLeft(),
                         "▢" => new BunkerFloor(),
                         "8" => new Rock(),
                         "≈" => new ForceField(cellString),
@@ -147,8 +156,7 @@ namespace Adventure.Entities.Levels
                     x++;
                 }
             }
-
-            return map;
+            Map.Cells = map;
         }
     }
 }

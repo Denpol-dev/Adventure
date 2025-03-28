@@ -1,0 +1,31 @@
+﻿{
+  "Levels": [
+    {
+      "LevelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+      "Name": "N23S55",
+      "LevelColor": 0,
+      "TopLevelId": null,
+      "BottomLevelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d",
+      "LeftLevelId": null,
+      "RightLevelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d"
+    },
+    {
+      "LevelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d",
+      "Name": "N23S56",
+      "LevelColor": 0,
+      "TopLevelId": "",
+      "BottomLevelId": "",
+      "LeftLevelId": "",
+      "RightLevelId": ""
+    },
+    {
+      "LevelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d",
+      "Name": "N24S55",
+      "LevelColor": 0,
+      "TopLevelId": "",
+      "BottomLevelId": "",
+      "LeftLevelId": "",
+      "RightLevelId": ""
+    }
+  ]
+}

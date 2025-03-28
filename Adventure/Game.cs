@@ -11,7 +11,7 @@ namespace Adventure
 
             var levels = new InitLevels();
 
-            program.Level = levels.Level11;
+            program.Level = levels.FirstLevel;
             var level = program.Level;
             Console.BackgroundColor = level.LevelColor;
             program.Character = new Character(program);
@@ -25,7 +25,7 @@ namespace Adventure
             {
                 key = Console.ReadKey(true);
 
-                program.Character.DoAction(key.Key.ToString(), program.Level.GetMap());
+                program.Character.DoAction(key.Key.ToString(), program.Level.Map);
             }
             while (key.Key != ConsoleKey.Escape);
         }

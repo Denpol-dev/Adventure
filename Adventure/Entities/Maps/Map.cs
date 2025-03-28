@@ -6,6 +6,7 @@ namespace Adventure.Entities.Maps
     {
         public int Width { get; set; }
         public int Height { get; set; }
+        public string Sprite { get; set; }
         public List<Cell> Cells { get; set; } = [];
     }
 

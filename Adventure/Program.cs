@@ -35,7 +35,7 @@ namespace Adventure
             switch (vector)
             {
                 case Vector.Left:
-                    x = Level.GetMap().Width;
+                    x = Level.Map.Width;
                     y = character.Y;
                     break;
                 case Vector.Right:
@@ -44,7 +44,7 @@ namespace Adventure
                     break;
                 case Vector.Top:
                     x = character.X;
-                    y = Level.GetMap().Height;
+                    y = Level.Map.Height;
                     break;
                 case Vector.Bottom:
                     x = character.X;
@@ -63,7 +63,7 @@ namespace Adventure
             SetConsoleCP(932);
             Console.OutputEncoding = Encoding.Unicode;
 
-            Prologue.PrologueStart(true, true);
+            Prologue.PrologueStart(false, true);
             Console.CursorVisible = false;
             Game.StartGame(program);
         }
