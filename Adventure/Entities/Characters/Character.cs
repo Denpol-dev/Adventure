@@ -57,7 +57,7 @@ namespace Adventure.Entities.Characters
                     }
                     break;
                 case "S":
-                    if (Y < map.Height)
+                    if (Y < map.Height + 2)
                     {
                         if (CheckCollision(map, X, Y + 1))
                         {

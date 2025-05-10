@@ -89,18 +89,14 @@ namespace Adventure.Entities.Levels
             string sprite = Map.Sprite.Replace("\r", "").Replace("\n", "");
             var map = new List<Cell>();
             int stringIndex = 0;
-            string cellString = "";
-            int x;
-            int y = 2;
-            while (cellString != "~")
+            int x = 0;
+            int y = 3;
+
+            foreach (var cell in sprite)
             {
-                stringIndex++;
-                cellString = sprite[stringIndex].ToString();
-                y++;
-                x = 0;
-                while (cellString != "I" && cellString != "~")
+                var cellString = cell.ToString();
+                if (cellString != "I")
                 {
-                    cellString = sprite[stringIndex].ToString();
                     Actor? actor = cellString switch
                     {
                         "I" => null,
@@ -121,9 +117,7 @@ namespace Adventure.Entities.Levels
                         "▧" => new AlienFloor(),
                         "▮" => new Table(),
                         "□" => new CarFloor(),
-
                         "©" => new Sign(cellString),
-
                         "1" => new Terminal(cellString),
                         "2" => new Terminal(cellString),
                         "3" => new Terminal(cellString),
@@ -135,7 +129,6 @@ namespace Adventure.Entities.Levels
                         "0" => new Terminal(cellString),
                         "◬" => new Terminal(cellString),
                         "◮" => new Terminal(cellString),
-
                         "▣" => new Chest(cellString),
                         "◊" => new Chest(cellString),
                         ";" => new Chest(cellString),
@@ -154,6 +147,22 @@ namespace Adventure.Entities.Levels
                     });
                     stringIndex++;
                     x++;
+                }
+                else
+                {
+                    Actor? actor = null;
+                    map.Add(new Cell()
+                    {
+                        X = x,
+                        Y = y,
+                        CellType = new CellType()
+                        {
+                            Fill = actor?.Icon ?? cellString,
+                            Actor = actor
+                        }
+                    });
+                    x = 0;
+                    y++;
                 }
             }
             Map.Cells = map;
