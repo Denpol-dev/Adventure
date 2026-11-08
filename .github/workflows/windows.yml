@@ -1,0 +1,30 @@
+name: Windows build and tests
+
+on:
+  push:
+    branches: [master, JSON-saves, 'feature/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build Adventure.sln -c Release
+      - run: dotnet test Adventure.sln -c Release --no-build
+      - run: dotnet publish Foxnet.Desktop/Foxnet.Desktop.csproj -c Release --no-build -o publish
+      - shell: pwsh
+        run: |
+          foreach ($file in 'Foxnet.Desktop.exe', 'Console/Adventure.exe', 'Console/Foxnet.Session.dll', 'Console/Worlds/default/world.json') {
+            if (!(Test-Path (Join-Path publish $file) -PathType Leaf)) {
+              throw "Missing publish file: $file"
+            }
+          }
+          $levels = Get-ChildItem publish/Console/Worlds/default/levels -Filter '*.json' -File
+          if ($levels.Count -ne 16) { throw "Expected 16 quadrant files, found $($levels.Count)" }

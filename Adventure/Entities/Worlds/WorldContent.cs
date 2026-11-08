@@ -74,7 +74,7 @@ namespace Adventure.Entities.Worlds
             return actor;
         }
 
-        private static Item? CreateItem(ItemKind? kind) => kind switch
+        internal static Item? CreateItem(ItemKind? kind) => kind switch
         {
             null => null,
             ItemKind.HardDriveXD23 => new HardDriveXD23(),
@@ -83,6 +83,16 @@ namespace Adventure.Entities.Worlds
             ItemKind.UniversalPass => new UniversalPass(),
             ItemKind.Key => new Key(),
             _ => throw new InvalidDataException($"Неизвестный предмет {kind}.")
+        };
+
+        internal static ItemKind GetItemKind(Item item) => item switch
+        {
+            HardDriveXD23 => ItemKind.HardDriveXD23,
+            HardDriveXD23Full => ItemKind.HardDriveXD23Full,
+            ArtifactY66 => ItemKind.ArtifactY66,
+            UniversalPass => ItemKind.UniversalPass,
+            Key => ItemKind.Key,
+            _ => throw new InvalidDataException($"Неизвестный предмет {item.Name}.")
         };
     }
 }

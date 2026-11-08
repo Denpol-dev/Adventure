@@ -17,6 +17,7 @@ internal sealed class WindowsConsoleHost : IConsoleHost
         {
             FileName = path,
             WorkingDirectory = Path.GetDirectoryName(path)!,
+            ArgumentList = { "--session", ExpeditionAddress.DefaultDatabasePath },
             UseShellExecute = true
         }) ?? throw new InvalidOperationException("Windows не вернула процесс консоли.");
 

@@ -26,11 +26,10 @@
       <_AdventureOutput>@(_AdventureTarget->'%(RootDir)%(Directory)')</_AdventureOutput>
     </PropertyGroup>
     <ItemGroup>
-      <_AdventureProgram Include="$(_AdventureOutput)Adventure.exe;$(_AdventureOutput)Adventure.dll;$(_AdventureOutput)Adventure.deps.json;$(_AdventureOutput)Adventure.runtimeconfig.json" />
-      <_AdventureWorld Include="$(_AdventureOutput)Worlds/**/*.json" />
+      <_AdventureProgram Include="$(_AdventureOutput)**/*" Exclude="$(_AdventureOutput)**/*.pdb" />
     </ItemGroup>
-    <Copy SourceFiles="@(_AdventureProgram)" DestinationFolder="$(TargetDir)Console" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_AdventureWorld)" DestinationFiles="@(_AdventureWorld->'$(TargetDir)Console/Worlds/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(_AdventureOutput)Adventure.exe')" Text="Adventure.exe is missing from the console build." />
+    <Copy SourceFiles="@(_AdventureProgram)" DestinationFiles="@(_AdventureProgram->'$(TargetDir)Console/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="PublishAdventureWithDesktop" AfterTargets="Publish">

@@ -115,19 +115,21 @@ namespace Adventure
         private static void WriteInventory(Character character) =>
             Console.WriteLine("Инвентарь: " + string.Join(", ", character.Inventory.Items.Select(item => item.Name)));
 
+        internal static readonly string[] CompletionLines =
+        [
+            "+--------------------------------------+",
+            "|-------------ПОЗДРАВЛЯЮ!--------------|",
+            "|-----------ВЫ ПРОШЛИ ИГРУ!------------|",
+            "|-ВЫ МОЖЕТЕ ИССЛЕДОВАТЬ КАРТУ ЕЩЕ РАЗ,-|",
+            "|-------ЛИБО СРАЗУ ЗАКРЫТЬ ИГРУ.-------|",
+            "|---СПАСИБО, ЧТО ИГРАЛИ В МОЮ ИГРУ!----|",
+            "|-----ВАШ ДЕНИС KOTONETR ПОЛУРОТОВ-----|",
+            "+--------------------------------------+"
+        ];
+
         private static void FinalMessage(Map map)
         {
-            string[] lines =
-            [
-                "+--------------------------------------+",
-                "|-------------ПОЗДРАВЛЯЮ!--------------|",
-                "|-----------ВЫ ПРОШЛИ ИГРУ!------------|",
-                "|-ВЫ МОЖЕТЕ ИССЛЕДОВАТЬ КАРТУ ЕЩЕ РАЗ,-|",
-                "|-------ЛИБО СРАЗУ ЗАКРЫТЬ ИГРУ.-------|",
-                "|---СПАСИБО, ЧТО ИГРАЛИ В МОЮ ИГРУ!----|",
-                "|-----ВАШ ДЕНИС KOTONETR ПОЛУРОТОВ-----|",
-                "+--------------------------------------+"
-            ];
+            var lines = CompletionLines;
             int left = Math.Max(0, (map.Width - lines[0].Length) / 2);
             int top = MapTop + Math.Max(0, (map.Height - lines.Length) / 2);
             Console.ForegroundColor = ConsoleColor.Green;

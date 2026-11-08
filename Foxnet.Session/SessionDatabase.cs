@@ -4,7 +4,7 @@ namespace Foxnet.Session;
 
 internal sealed class SessionDatabase(string path)
 {
-    private const int SchemaVersion = 2;
+    private const int SchemaVersion = 3;
     private readonly string _path = Path.GetFullPath(path);
 
     public SqliteConnection Open()
@@ -58,14 +58,23 @@ internal sealed class SessionDatabase(string path)
         if (version == 0)
             CreateInitialSchema(connection, transaction);
 
-        Execute(connection, transaction, """
+        if (version < 2)
+            Execute(connection, transaction, """
             CREATE TABLE player_account (
                 singleton INTEGER PRIMARY KEY CHECK(singleton = 1) REFERENCES profile(singleton),
                 salt BLOB NOT NULL CHECK(length(salt) = 16),
                 password_hash BLOB NOT NULL CHECK(length(password_hash) = 32),
                 failed_attempts INTEGER NOT NULL DEFAULT 0 CHECK(failed_attempts BETWEEN 0 AND 3)
             );
-            PRAGMA user_version = 2;
+            """);
+
+        Execute(connection, transaction, """
+            CREATE TABLE expeditions (
+                world_id TEXT PRIMARY KEY NOT NULL,
+                revision INTEGER NOT NULL CHECK(revision >= 1),
+                payload BLOB NOT NULL
+            );
+            PRAGMA user_version = 3;
             """);
     }
 

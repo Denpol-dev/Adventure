@@ -1,3 +1,4 @@
+using Adventure.Expeditions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -54,6 +55,7 @@ namespace Adventure.Entities.Worlds
                 Start = manifest.Start,
                 Levels = levels,
                 Buildings = manifest.Buildings,
+                Expedition = manifest.Expedition,
                 Metadata = manifest.Metadata
             };
             WorldValidator.Validate(world);
@@ -84,6 +86,7 @@ namespace Adventure.Entities.Worlds
                 Start = world.Start,
                 LevelFiles = files,
                 Buildings = world.Buildings,
+                Expedition = world.Expedition,
                 Metadata = world.Metadata
             };
             WriteAtomically(path, JsonSerializer.SerializeToUtf8Bytes(manifest, JsonOptions));
@@ -131,6 +134,7 @@ namespace Adventure.Entities.Worlds
             public required DroneStart Start { get; init; }
             public required List<string> LevelFiles { get; init; }
             public List<BuildingDefinition> Buildings { get; init; } = [];
+            public ExpeditionDefinition? Expedition { get; init; }
             public Dictionary<string, JsonElement> Metadata { get; init; } = [];
         }
     }

@@ -120,6 +120,10 @@
                                 <Border Style="{StaticResource Chip}" Margin="0,0,0,7">
                                     <TextBlock Text="{Binding AuthorizationLabel}" FontSize="12.5"/>
                                 </Border>
+                                <Border Style="{StaticResource Chip}" Margin="7,0,0,7"
+                                        Visibility="{Binding HasExpedition, Converter={StaticResource BoolVisibility}}">
+                                    <TextBlock Text="{Binding ExpeditionLabel}" FontSize="12.5"/>
+                                </Border>
                             </WrapPanel>
                             <StackPanel Visibility="{Binding NeedsAuthorization, Converter={StaticResource BoolVisibility}}"
                                         IsEnabled="{Binding NotBusy}" Margin="0,7,0,0">
