@@ -26,7 +26,7 @@ namespace Adventure.Entities.Worlds
                 Require(levels.TryAdd(level.Id, level), $"Повторяющийся идентификатор квадранта: {level.Id}.");
                 Require(coordinates.Add((level.GlobalX, level.GlobalY)),
                     $"Квадрант {level.Name}: глобальные координаты ({level.GlobalX}, {level.GlobalY}) уже заняты.");
-                ValidateLevel(level, objectIds, buildings);
+                ValidateLevel(level, objectIds, buildings, world.Expedition?.Station);
             }
 
             foreach (var level in levels.Values)
@@ -54,7 +54,12 @@ namespace Adventure.Entities.Worlds
                 first.Objects.Where(obj => obj.X == start.X && obj.Y == start.Y));
             Require(cell.CanEnter([]), $"Квадрант {first.Name}: стартовая клетка непроходима.");
             if (world.Expedition is { } expedition)
+            {
                 ExpeditionValidator.Validate(expedition, levels, buildings);
+                var position = expedition.Drones.Single(drone => drone.Id == expedition.StartDroneId).Position;
+                Require((position.LevelId, position.X, position.Y) == (start.LevelId, start.X, start.Y),
+                    "Стартовая позиция мира не совпадает с позицией начального дрона.");
+            }
         }
 
         private static Dictionary<string, HashSet<string>> ValidateBuildings(List<BuildingDefinition> buildings)
@@ -74,7 +79,7 @@ namespace Adventure.Entities.Worlds
         }
 
         private static void ValidateLevel(LevelDefinition level, HashSet<string> objectIds,
-            Dictionary<string, HashSet<string>> buildings)
+            Dictionary<string, HashSet<string>> buildings, StationDefinition? station)
         {
             Require(level.Width > 0 && level.Height > 0 && level.Rows?.Count == level.Height &&
                 level.Rows.All(row => row?.Length == level.Width),
@@ -111,6 +116,9 @@ namespace Adventure.Entities.Worlds
             }
 
             var objects = level.Objects.ToLookup(obj => (obj.X, obj.Y));
+            var personalGates = station?.Origin.LevelId == level.Id
+                ? station.Bays?.Where(bay => bay != null).Select(bay => station.At(bay.GateX, bay.GateY)).ToHashSet()
+                : null;
             for (int y = 0; y < level.Height; y++)
             {
                 for (int x = 0; x < level.Width; x++)
@@ -118,7 +126,8 @@ namespace Adventure.Entities.Worlds
                     char symbol = level.Rows[y][x];
                     if (!WorldContent.IsKnownSymbol(symbol))
                         throw new InvalidDataException($"Квадрант {level.Name}: неизвестный символ '{symbol}' в ({x}, {y}).");
-                    if (!WorldContent.HasRequiredObject(symbol, objects[(x, y)]))
+                    if (!WorldContent.HasRequiredObject(symbol, objects[(x, y)]) &&
+                        !(symbol == '≈' && personalGates?.Contains(new(level.Id, x, y)) == true))
                         throw new InvalidDataException($"Квадрант {level.Name}: для символа '{symbol}' в ({x}, {y}) не задан объект нужного типа.");
                 }
             }

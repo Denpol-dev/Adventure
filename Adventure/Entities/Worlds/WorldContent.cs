@@ -27,13 +27,13 @@ namespace Adventure.Entities.Worlds
         {
             '≈' or '*' => ObjectKind.ForceField,
             '▣' or '◊' or ';' or 'e' => ObjectKind.Chest,
-            '1' or '2' or '3' or '4' or '5' or '6' or '7' or '9' or '0' or '◬' or '◮' => ObjectKind.Terminal,
+            '1' or '2' or '3' or '4' or '5' or '6' or '7' or '9' or '0' or '◬' or '◮' or '░' => ObjectKind.Terminal,
             '©' => ObjectKind.Sign,
             _ => null
         };
 
         public static bool IsKnownSymbol(char symbol) =>
-            TerrainActors.ContainsKey(symbol) || symbol is ' ' or '◉' || MarkerKind(symbol) != null;
+            TerrainActors.ContainsKey(symbol) || symbol is ' ' or '◉' or '·' || MarkerKind(symbol) != null;
 
         public static bool HasRequiredObject(char symbol, IEnumerable<ObjectDefinition> objects) =>
             MarkerKind(symbol) is not ObjectKind kind || objects.Any(obj => obj.Kind == kind);

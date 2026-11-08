@@ -24,6 +24,14 @@ public sealed partial class ExpeditionEngine
     private void RefreshVisibility(bool remember)
     {
         _visible.Clear();
+        if (State.AwaitingFirstSurvey)
+        {
+            _visible[ActiveDrone.Position] = _map.Sample(ActiveDrone.Position);
+            if (remember)
+                RememberSurvey();
+            return;
+        }
+
         Survey(State.Laser, orbital: true);
         var drone = ActiveDrone;
         Dictionary<WorldPosition, ObservedCell>? orbital = null;
@@ -40,18 +48,7 @@ public sealed partial class ExpeditionEngine
 
         if (!remember)
             return;
-        foreach (var (position, sample) in _visible)
-        {
-            if (!State.Explored.TryGetValue(position.LevelId, out var level))
-            {
-                level = [];
-                State.Explored.Add(position.LevelId, level);
-            }
-            int index = _map.CellIndex(position);
-            if (sample.Detail || level.GetValueOrDefault(index) is not { Detail: true })
-                level[index] = sample;
-        }
-
+        RememberSurvey();
         foreach (var candidate in State.Drones.Values)
         {
             if (_visible.GetValueOrDefault(candidate.Position) is { Detail: true })
@@ -63,6 +60,34 @@ public sealed partial class ExpeditionEngine
             _visible.Clear();
             foreach (var (position, sample) in orbital)
                 _visible.Add(position, sample);
+        }
+    }
+
+    private void SurveyStartingBay()
+    {
+        var station = Definition.Station;
+        var bay = station.Bays.Single(candidate => candidate.DroneId == Definition.StartDroneId);
+        Survey(station.At(bay.ParkingX, bay.ParkingY), orbital: true);
+        foreach (int x in new[] { bay.GateX, bay.ParkingX, bay.TerminalX })
+        {
+            var position = station.At(x, bay.ParkingY);
+            _visible[position] = _map.Sample(position);
+        }
+        RememberSurvey();
+    }
+
+    private void RememberSurvey()
+    {
+        foreach (var (position, sample) in _visible)
+        {
+            if (!State.Explored.TryGetValue(position.LevelId, out var level))
+            {
+                level = [];
+                State.Explored.Add(position.LevelId, level);
+            }
+            int index = _map.CellIndex(position);
+            if (sample.Detail || level.GetValueOrDefault(index) is not { Detail: true })
+                level[index] = sample;
         }
     }
 

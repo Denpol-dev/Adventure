@@ -1,5 +1,4 @@
 using Adventure.Entities;
-using Adventure.Entities.Actors;
 using Adventure.Entities.Items;
 using Adventure.Entities.Levels;
 using Adventure.Entities.Maps;
@@ -10,7 +9,7 @@ namespace Adventure.Expeditions;
 
 internal sealed class ExpeditionMap
 {
-    private readonly Dictionary<WorldPosition, char> _station = [];
+    private readonly StationDefinition _station;
     private readonly Dictionary<WorldPosition, string> _gates = [];
     private readonly Dictionary<WorldPosition, InteriorArea> _interiors = [];
     private readonly Dictionary<string, DroneDefinition> _drones;
@@ -19,31 +18,28 @@ internal sealed class ExpeditionMap
     {
         Levels = levels.Levels;
         _drones = definition.Drones.ToDictionary(drone => drone.Id);
-        var station = definition.Station;
-        for (int y = 0; y < station.Rows.Count; y++)
-        for (int x = 0; x < station.Rows[y].Length; x++)
+        _station = definition.Station;
+        var map = Levels[_station.Origin.LevelId].Map;
+        for (int y = _station.Origin.Y; y < _station.Origin.Y + _station.Height; y++)
+        for (int x = _station.Origin.X; x < _station.Origin.X + _station.Width; x++)
         {
-            char glyph = station.Rows[y][x];
-            if (glyph == ' ')
-                continue;
-            var position = At(station.Origin, x, y);
-            _station.Add(position, glyph);
-            if (glyph == 'T')
-                Terminal = position;
+            if (map[x, y].Objects.Any(obj => obj.Id == _station.ServiceTerminalId))
+                Terminal = new WorldPosition(_station.Origin.LevelId, x, y);
         }
 
-        foreach (var bay in station.Bays)
-            _gates.Add(At(station.Origin, bay.GateX, bay.GateY), bay.DroneId);
+        foreach (var bay in _station.Bays)
+            _gates.Add(_station.At(bay.GateX, bay.GateY), bay.DroneId);
 
         foreach (var room in definition.Interiors)
         for (int y = 0; y < room.Height; y++)
         for (int x = 0; x < room.Width; x++)
-            _interiors.Add(At(room.Origin, x, y), room);
+            _interiors.Add(room.Origin with { X = room.Origin.X + x, Y = room.Origin.Y + y }, room);
     }
 
     public IReadOnlyDictionary<Guid, Level> Levels { get; }
     public WorldPosition Terminal { get; }
-    public bool OnStation(WorldPosition position) => _station.ContainsKey(position);
+    public bool OnStation(WorldPosition position) =>
+        _station.Contains(position) && StationDefinition.IsStationGlyph(CellAt(position).Symbol);
     public bool IsValid(WorldPosition position) =>
         Levels.TryGetValue(position.LevelId, out var level) && level.Map.Contains(position.X, position.Y);
 
@@ -59,15 +55,13 @@ internal sealed class ExpeditionMap
     {
         if (_gates.TryGetValue(position, out var assigned))
             return droneId == assigned;
-        if (_station.TryGetValue(position, out char glyph))
-            return glyph is '▢' or 'T';
         return CellAt(position).CanEnter(inventory);
     }
 
     public bool BlocksScan(WorldPosition position, bool roofProjection = false)
     {
-        if (_station.TryGetValue(position, out char glyph))
-            return glyph is '+' or '-' or '|' or 'G';
+        if (_gates.ContainsKey(position))
+            return true;
         var cell = CellAt(position);
         return cell.Properties?.BlocksScanning ??
             (!roofProjection && (cell.Terrain is { IsCollision: true } || cell.Symbol == '◉' ||
@@ -78,8 +72,6 @@ internal sealed class ExpeditionMap
     {
         if (_gates.TryGetValue(position, out var owner))
             return new('≈', _drones[owner].Color, true);
-        if (_station.TryGetValue(position, out char glyph))
-            return glyph == 'T' ? new('░', ConsoleColor.Cyan, true) : new(glyph, ConsoleColor.Gray, true);
 
         var cell = CellAt(position);
         return new(cell.Fill[0], cell.VisibleActor?.Color ?? ConsoleColor.Gray, true);
@@ -128,7 +120,4 @@ internal sealed class ExpeditionMap
         }
         return true;
     }
-
-    private static WorldPosition At(WorldPosition origin, int x, int y) =>
-        origin with { X = origin.X + x, Y = origin.Y + y };
 }

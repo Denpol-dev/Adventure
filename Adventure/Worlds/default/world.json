@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "id": "0e35dccd-2c16-56c1-a4e0-32de6a083905",
   "start": {
-    "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
-    "x": 1,
-    "y": 4
+    "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+    "x": 43,
+    "y": 25
   },
   "levelFiles": [
     "levels/N23S55.json",
@@ -52,6 +52,29 @@
         "south-west",
         "south-east"
       ]
+    },
+    {
+      "id": "haesei-04",
+      "rooms": [
+        "warehouse",
+        "dispatch",
+        "BAY-01",
+        "BAY-02",
+        "BAY-03",
+        "BAY-04",
+        "BAY-05",
+        "BAY-06",
+        "BAY-07",
+        "BAY-08",
+        "BAY-09",
+        "BAY-10",
+        "BAY-11",
+        "BAY-12",
+        "BAY-13",
+        "BAY-14",
+        "BAY-15",
+        "BAY-16"
+      ]
     }
   ],
   "expedition": {
@@ -67,167 +90,143 @@
       "highCapacityBatteryCapacity": 1600
     },
     "station": {
-      "id": "N23S55-service",
+      "id": "haesei-04",
       "origin": {
-        "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+        "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
         "x": 24,
         "y": 1
       },
-      "rows": [
-        "+---------------------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+",
-        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
-        "|▢▢▢▢▢▢▢▢|▢T▢|▢▢▢▢▢▢▢▢|",
-        "+--------+▢▢▢+--------+"
-      ],
+      "width": 38,
+      "height": 24,
+      "serviceTerminalId": "haesei-04-service",
       "bays": [
         {
           "id": "BAY-01",
           "droneId": "DR-01",
-          "gateX": 9,
-          "gateY": 1,
-          "parkingX": 5,
-          "parkingY": 1
+          "gateX": 16,
+          "gateY": 15,
+          "parkingX": 15,
+          "parkingY": 15
         },
         {
           "id": "BAY-02",
           "droneId": "DR-02",
-          "gateX": 9,
-          "gateY": 4,
-          "parkingX": 5,
-          "parkingY": 4
+          "gateX": 16,
+          "gateY": 13,
+          "parkingX": 15,
+          "parkingY": 13
         },
         {
           "id": "BAY-03",
           "droneId": "DR-03",
-          "gateX": 9,
-          "gateY": 7,
-          "parkingX": 5,
-          "parkingY": 7
+          "gateX": 16,
+          "gateY": 11,
+          "parkingX": 15,
+          "parkingY": 11
         },
         {
           "id": "BAY-04",
           "droneId": "DR-04",
-          "gateX": 9,
-          "gateY": 10,
-          "parkingX": 5,
-          "parkingY": 10
+          "gateX": 16,
+          "gateY": 9,
+          "parkingX": 15,
+          "parkingY": 9
         },
         {
           "id": "BAY-05",
           "droneId": "DR-05",
-          "gateX": 9,
-          "gateY": 13,
-          "parkingX": 5,
-          "parkingY": 13
+          "gateX": 16,
+          "gateY": 7,
+          "parkingX": 15,
+          "parkingY": 7
         },
         {
           "id": "BAY-06",
           "droneId": "DR-06",
-          "gateX": 9,
-          "gateY": 16,
-          "parkingX": 5,
-          "parkingY": 16
+          "gateX": 16,
+          "gateY": 5,
+          "parkingX": 15,
+          "parkingY": 5
         },
         {
           "id": "BAY-07",
           "droneId": "DR-07",
-          "gateX": 9,
-          "gateY": 19,
-          "parkingX": 5,
-          "parkingY": 19
+          "gateX": 16,
+          "gateY": 3,
+          "parkingX": 15,
+          "parkingY": 3
         },
         {
           "id": "BAY-08",
           "droneId": "DR-08",
-          "gateX": 9,
-          "gateY": 22,
-          "parkingX": 5,
-          "parkingY": 22
+          "gateX": 16,
+          "gateY": 1,
+          "parkingX": 15,
+          "parkingY": 1
         },
         {
           "id": "BAY-09",
           "droneId": "DR-09",
-          "gateX": 13,
-          "gateY": 1,
-          "parkingX": 17,
-          "parkingY": 1
+          "gateX": 20,
+          "gateY": 15,
+          "parkingX": 21,
+          "parkingY": 15
         },
         {
           "id": "BAY-10",
           "droneId": "DR-10",
-          "gateX": 13,
-          "gateY": 4,
-          "parkingX": 17,
-          "parkingY": 4
+          "gateX": 20,
+          "gateY": 13,
+          "parkingX": 21,
+          "parkingY": 13
         },
         {
           "id": "BAY-11",
           "droneId": "DR-11",
-          "gateX": 13,
-          "gateY": 7,
-          "parkingX": 17,
-          "parkingY": 7
+          "gateX": 20,
+          "gateY": 11,
+          "parkingX": 21,
+          "parkingY": 11
         },
         {
           "id": "BAY-12",
           "droneId": "DR-12",
-          "gateX": 13,
-          "gateY": 10,
-          "parkingX": 17,
-          "parkingY": 10
+          "gateX": 20,
+          "gateY": 9,
+          "parkingX": 21,
+          "parkingY": 9
         },
         {
           "id": "BAY-13",
           "droneId": "DR-13",
-          "gateX": 13,
-          "gateY": 13,
-          "parkingX": 17,
-          "parkingY": 13
+          "gateX": 20,
+          "gateY": 7,
+          "parkingX": 21,
+          "parkingY": 7
         },
         {
           "id": "BAY-14",
           "droneId": "DR-14",
-          "gateX": 13,
-          "gateY": 16,
-          "parkingX": 17,
-          "parkingY": 16
+          "gateX": 20,
+          "gateY": 5,
+          "parkingX": 21,
+          "parkingY": 5
         },
         {
           "id": "BAY-15",
           "droneId": "DR-15",
-          "gateX": 13,
-          "gateY": 19,
-          "parkingX": 17,
-          "parkingY": 19
+          "gateX": 20,
+          "gateY": 3,
+          "parkingX": 21,
+          "parkingY": 3
         },
         {
           "id": "BAY-16",
           "droneId": "DR-16",
-          "gateX": 13,
-          "gateY": 22,
-          "parkingX": 17,
-          "parkingY": 22
+          "gateX": 20,
+          "gateY": 1,
+          "parkingX": 21,
+          "parkingY": 1
         }
       ]
     },
@@ -237,9 +236,9 @@
         "name": "Рабочий 01",
         "kind": "worker",
         "position": {
-          "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
-          "x": 29,
-          "y": 2
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 43,
+          "y": 25
         },
         "color": "cyan",
         "maxWeight": 10,
@@ -446,8 +445,8 @@
         "id": "DN-01",
         "name": "Неисправный дрон DN-01",
         "position": {
-          "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
-          "x": 36,
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 47,
           "y": 26
         },
         "components": [
@@ -775,7 +774,206 @@
         },
         "width": 2,
         "height": 1
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "warehouse",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 25,
+          "y": 18
+        },
+        "width": 10,
+        "height": 6
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "dispatch",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 51,
+          "y": 18
+        },
+        "width": 10,
+        "height": 6
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-01",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 16
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-02",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 14
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-03",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 12
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-04",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 10
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-05",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 8
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-06",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 6
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-07",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 4
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-08",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 38,
+          "y": 2
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-09",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 16
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-10",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 14
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-11",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 12
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-12",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 10
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-13",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 8
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-14",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 6
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-15",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 4
+        },
+        "width": 2,
+        "height": 2
+      },
+      {
+        "buildingId": "haesei-04",
+        "roomId": "BAY-16",
+        "origin": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 45,
+          "y": 2
+        },
+        "width": 2,
+        "height": 2
       }
-    ]
+    ],
+    "layoutRevision": 1
   }
 }

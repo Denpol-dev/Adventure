@@ -89,6 +89,13 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
 
     private void ShowInteraction(Interaction interaction)
     {
+        if (interaction is { Result: InteractionResult.Action, Actor: Terminal { LoadItem: null } terminal } &&
+            terminal.Message.Contains('\n'))
+        {
+            InMenu(() => ReadJournal(terminal));
+            return;
+        }
+
         if (interaction.Actor is Actor actor && Console.BufferHeight > Actor.MessageY)
         {
             Draw();
@@ -103,6 +110,54 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
             InMenu(() => Pick("Передача данных завершена", ConsoleView.CompletionLines, ""));
             _preserveMessage = false;
         }
+    }
+
+    private void ReadJournal(Terminal terminal)
+    {
+        int top = 0;
+        while (true)
+        {
+            var size = ExpeditionDisplay.Size();
+            var lines = WrapJournal(terminal.Message, Math.Max(1, size.Width));
+            int page = Math.Max(1, size.Height - ExpeditionDisplay.JournalHeaderHeight);
+            int last = Math.Max(0, lines.Count - page);
+            top = Math.Clamp(top, 0, last);
+            _display.Journal(terminal.Name, lines, top, size);
+
+            while (!Console.KeyAvailable && ExpeditionDisplay.Size() == size)
+                Thread.Sleep(35);
+            if (ExpeditionDisplay.Size() != size || !Console.KeyAvailable)
+                continue;
+
+            switch (Console.ReadKey(true).Key)
+            {
+                case ConsoleKey.Escape: return;
+                case ConsoleKey.UpArrow: top--; break;
+                case ConsoleKey.DownArrow: top++; break;
+                case ConsoleKey.PageUp: top -= page; break;
+                case ConsoleKey.PageDown: top += page; break;
+                case ConsoleKey.Home: top = 0; break;
+                case ConsoleKey.End: top = last; break;
+            }
+        }
+    }
+
+    private static List<string> WrapJournal(string text, int width)
+    {
+        var lines = new List<string>();
+        foreach (string paragraph in text.ReplaceLineEndings("\n").Split('\n'))
+        {
+            string remaining = paragraph;
+            while (remaining.Length > width)
+            {
+                int space = remaining.LastIndexOf(' ', width);
+                int split = space > 0 ? space : width;
+                lines.Add(remaining[..split]);
+                remaining = remaining[split..].TrimStart();
+            }
+            lines.Add(remaining);
+        }
+        return lines;
     }
 
     private void InMenu(Action run)

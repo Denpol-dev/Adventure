@@ -9,14 +9,28 @@ public enum EquipmentKind { Lidar, BiometricEye, Wheels, Legs, BodyModule, Gripp
 public enum DroneKind { Worker, Cargo }
 
 public sealed record ExpeditionDefinition(string StartDroneId, ExpeditionBalance Balance, StationDefinition Station,
-    List<DroneDefinition> Drones, List<DonorDefinition> Donors, List<InteriorArea> Interiors);
+    List<DroneDefinition> Drones, List<DonorDefinition> Donors, List<InteriorArea> Interiors, int LayoutRevision = 0);
 
 public sealed record ExpeditionBalance(int ScanRadius, decimal WheelMove, decimal LegMove, decimal LidarScan,
     decimal ToolUse, decimal StationCharge, decimal BatteryCapacity, decimal HighCapacityBatteryCapacity);
 
-public sealed record StationDefinition(string Id, WorldPosition Origin, List<string> Rows, List<BayDefinition> Bays);
+public sealed record StationDefinition(string Id, WorldPosition Origin, int Width, int Height,
+    string ServiceTerminalId, List<BayDefinition> Bays)
+{
+    public bool Contains(WorldPosition position) => position.LevelId == Origin.LevelId &&
+        position.X >= Origin.X && position.X - Origin.X < Width &&
+        position.Y >= Origin.Y && position.Y - Origin.Y < Height;
 
-public sealed record BayDefinition(string Id, string DroneId, int GateX, int GateY, int ParkingX, int ParkingY);
+    public WorldPosition At(int x, int y) => Origin with { X = Origin.X + x, Y = Origin.Y + y };
+
+    internal static bool IsStationGlyph(char glyph) => glyph is '▢' or '+' or '-' or '|' or '▮' or '≈' or '░';
+}
+
+public sealed record BayDefinition(string Id, string DroneId, int GateX, int GateY, int ParkingX, int ParkingY)
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int TerminalX => ParkingX + (ParkingX - GateX);
+}
 
 public sealed record DroneDefinition(string Id, string Name, DroneKind Kind, WorldPosition Position, ConsoleColor Color,
     int MaxWeight, decimal BatteryPercent);

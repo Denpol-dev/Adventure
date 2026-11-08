@@ -40,6 +40,8 @@ public sealed class StationState
 public sealed class ExpeditionState
 {
     public required Guid WorldId { get; init; }
+    public int LayoutRevision { get; set; }
+    public bool AwaitingFirstSurvey { get; set; }
     public required string SelectedDroneId { get; set; }
     public required WorldPosition Laser { get; set; }
     public ControlMode Mode { get; set; } = ControlMode.Combined;

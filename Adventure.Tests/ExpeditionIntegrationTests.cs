@@ -57,10 +57,10 @@ public sealed class ExpeditionIntegrationTests
     public void RestartRestoresFleetModeEquipmentDonorsAndSurveyWithoutCreatingANewRun()
     {
         var world = ExpeditionTests.Load();
-        var engine = ExpeditionTests.At(world, "N23S55", 36, 26);
+        var engine = ExpeditionTests.At(world, "N24S56", 47, 26);
         string battery = engine.Definition.Donors.First().Components[1].Id;
         ExpeditionTests.Apply(engine, FlightAction.Salvage, id: battery);
-        engine = ExpeditionTests.Relocate(world, engine.State, "N23S55", 35, 24);
+        engine = ExpeditionTests.Relocate(world, engine.State, engine.StationTerminal);
         string originalBattery = engine.ActiveDrone.Battery!.Id;
         ExpeditionTests.Apply(engine, FlightAction.Install, battery, EquipmentSlot.Battery);
         ExpeditionTests.Apply(engine, FlightAction.Charge);
@@ -115,6 +115,119 @@ public sealed class ExpeditionIntegrationTests
     }
 
     [Test]
+    public void StartingSurveyPersistsOnRestartAndDoesNotRunAgain()
+    {
+        var world = ExpeditionTests.Load();
+        var bay = world.Expedition!.Station.Bays.Single(candidate => candidate.Id == "BAY-01");
+        var parking = world.Expedition.Station.At(bay.ParkingX, bay.ParkingY);
+        int initialCells;
+        using (var owner = new ExpeditionOwner(world, Database))
+        {
+            Assert.That(owner.WasRestored, Is.False);
+            initialCells = owner.Status().ExploredCells;
+        }
+
+        long movedRevision;
+        string surveyed;
+        using (var owner = new ExpeditionOwner(world, Database))
+        {
+            Assert.That(owner.WasRestored, Is.True);
+            Assert.That(owner.Revision, Is.EqualTo(1));
+            Assert.That(owner.Status().ExploredCells, Is.EqualTo(initialCells));
+            Assert.That(owner.Read(engine => engine.ViewCell(parking).Visibility), Is.EqualTo(CellVisibility.Remembered));
+            Assert.That(owner.Execute(ExpeditionTests.Move(FlightDirection.Top)).Result.Reply.Applied, Is.True);
+            Assert.That(owner.Read(engine => engine.State.AwaitingFirstSurvey), Is.False);
+            Assert.That(owner.Status().ExploredCells, Is.GreaterThan(initialCells));
+            movedRevision = owner.Revision;
+            surveyed = owner.Read(engine => JsonSerializer.Serialize(engine.State.Explored));
+        }
+
+        using var restored = new ExpeditionOwner(world, Database);
+        Assert.That(restored.Revision, Is.EqualTo(movedRevision));
+        Assert.That(restored.Read(engine => engine.State.AwaitingFirstSurvey), Is.False);
+        Assert.That(restored.Read(engine => JsonSerializer.Serialize(engine.State.Explored)), Is.EqualTo(surveyed));
+    }
+
+    [Test]
+    public void LegacyLayoutMovesOnlyTheDroneCaughtInNewConstructionAndKeepsProgress()
+    {
+        var world = ExpeditionTests.Load();
+        var engine = new ExpeditionEngine(world);
+        var oldState = engine.State;
+        Guid oldLevel = world.Levels.Single(level => level.Name == "N23S55").Id;
+        Guid newLevel = world.Levels.Single(level => level.Name == "N24S56").Id;
+        var oldStarter = new WorldPosition(oldLevel, 29, 2);
+        var reachableHall = new WorldPosition(newLevel, 43, 21);
+        oldState.Drones["DR-01"].Position = oldStarter;
+        oldState.Drones["DR-06"].Position = reachableHall;
+        var selected = oldState.Drones["DR-07"];
+        selected.Discovered = true;
+        selected.Position = new WorldPosition(newLevel, 38, 16);
+        selected.Items.Add(ItemKind.HardDriveXD23Full);
+        ExpeditionTests.SetEnergy(selected, 17.4m);
+        oldState.SelectedDroneId = selected.Id;
+        oldState.Laser = selected.Position;
+        oldState.Explored.Clear();
+        oldState.Explored.Add(oldLevel, new() { [229] = new ObservedCell('▢', ConsoleColor.Gray, true) });
+        oldState.TerminalUses.Add("existing-terminal", 3);
+        oldState.Station.ChargeCycles = 2;
+        oldState.Donors["DN-01"].RemoveAt(0);
+        oldState.Looted.Add("existing-chest");
+        var legacy = JsonSerializer.SerializeToNode(oldState)!.AsObject();
+        legacy.Remove(nameof(ExpeditionState.LayoutRevision));
+        legacy.Remove(nameof(ExpeditionState.AwaitingFirstSurvey));
+        using (var store = new ExpeditionStore(Database))
+            store.Save(world.Id, 0, JsonSerializer.SerializeToUtf8Bytes(legacy));
+
+        WorldPosition migratedPosition;
+        using (var owner = new ExpeditionOwner(world, Database))
+        {
+            Assert.That(owner.Revision, Is.EqualTo(2));
+            var migrated = owner.Read(runtime => runtime.State);
+            migratedPosition = migrated.Drones[selected.Id].Position;
+            Assert.Multiple(() =>
+            {
+                Assert.That(migrated.LayoutRevision, Is.EqualTo(world.Expedition!.LayoutRevision));
+                Assert.That(migrated.Drones["DR-01"].Position, Is.EqualTo(oldStarter));
+                Assert.That(migrated.Drones["DR-06"].Position, Is.EqualTo(reachableHall));
+                Assert.That(migratedPosition, Is.EqualTo(new WorldPosition(newLevel, 36, 16)));
+                Assert.That(migrated.Laser, Is.EqualTo(migratedPosition));
+                Assert.That(owner.Read(runtime => runtime.OnStation), Is.False);
+                Assert.That(migrated.SelectedDroneId, Is.EqualTo(selected.Id));
+                Assert.That(migrated.Drones[selected.Id].Battery!.Energy, Is.EqualTo(17.4m));
+                Assert.That(migrated.Drones[selected.Id].Items, Is.EqualTo(selected.Items));
+                Assert.That(migrated.Explored.Keys, Is.EqualTo(new[] { oldLevel }));
+                Assert.That(migrated.Explored[oldLevel][229], Is.EqualTo(oldState.Explored[oldLevel][229]));
+                Assert.That(migrated.TerminalUses["existing-terminal"], Is.EqualTo(3));
+                Assert.That(migrated.Station.ChargeCycles, Is.EqualTo(2));
+                Assert.That(migrated.Donors["DN-01"], Is.EqualTo(oldState.Donors["DN-01"]));
+                Assert.That(migrated.Looted, Contains.Item("existing-chest"));
+            });
+        }
+
+        using var restored = new ExpeditionOwner(world, Database);
+        Assert.That(restored.Revision, Is.EqualTo(2));
+        Assert.That(restored.Read(runtime => runtime.ActiveDrone.Position), Is.EqualTo(migratedPosition));
+    }
+
+    [Test]
+    public void AnUnsupportedSavedLayoutDoesNotReplaceTheSave()
+    {
+        var world = ExpeditionTests.Load();
+        var state = new ExpeditionEngine(world).State;
+        state.LayoutRevision = world.Expedition!.LayoutRevision + 1;
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(state);
+        using (var store = new ExpeditionStore(Database))
+            store.Save(world.Id, 0, payload);
+
+        Assert.Throws<InvalidDataException>(() => new ExpeditionOwner(world, Database));
+
+        using var reopened = new ExpeditionStore(Database);
+        Assert.That(reopened.Load(world.Id)!.Revision, Is.EqualTo(1));
+        Assert.That(reopened.Load(world.Id)!.Payload, Is.EqualTo(payload));
+    }
+
+    [Test]
     public async Task NamedPipeReturnsCommittedResultsPushesUpdatesAndReconnects()
     {
         var world = ExpeditionTests.Load();
@@ -134,7 +247,7 @@ public sealed class ExpeditionIntegrationTests
             Assert.That(reply.Result!.Applied, Is.True);
             Assert.That(reply.Status!.Revision, Is.EqualTo(initial.Revision + 1));
             Assert.That(await feed.MoveNextAsync(), Is.True);
-            Assert.That(feed.Current.Drones.Single(drone => drone.Selected).Position.X, Is.EqualTo(30));
+            Assert.That(feed.Current.Drones.Single(drone => drone.Selected).Position.X, Is.EqualTo(44));
             revision = feed.Current.Revision;
 
             var invalid = await client.RequestAsync(new(ExpeditionRequestKind.Command, new FlightCommand(FlightAction.Move)), timeout.Token);
@@ -146,7 +259,7 @@ public sealed class ExpeditionIntegrationTests
         await using var newServer = new ExpeditionPipeServer(reopened, Database);
         var status = (await client.RequestAsync(new(ExpeditionRequestKind.Status), timeout.Token)).Status!;
         Assert.That(status.Revision, Is.EqualTo(revision));
-        Assert.That(status.Drones.Single(drone => drone.Selected).Position.X, Is.EqualTo(30));
+        Assert.That(status.Drones.Single(drone => drone.Selected).Position.X, Is.EqualTo(44));
     }
 
     private void Seed(WorldDefinition world, ExpeditionState state)

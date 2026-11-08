@@ -7,6 +7,7 @@ namespace Adventure.Expeditions;
 internal sealed class ExpeditionDisplay
 {
     private const int HeaderHeight = 5;
+    public const int JournalHeaderHeight = 3;
     private Glyph[][] _previous = [];
     private int _width;
     private int _height;
@@ -70,6 +71,17 @@ internal sealed class ExpeditionDisplay
         for (int i = first; i < Math.Min(first + capacity, lines.Count); i++)
             Put(rows, 4 + i - first, (i == selected ? "› " : "  ") + lines[i],
                 i == selected ? ConsoleColor.Cyan : ConsoleColor.White);
+        Present(rows, width, height, false);
+    }
+
+    public void Journal(string title, IReadOnlyList<string> lines, int top, (int Width, int Height) size)
+    {
+        var (width, height) = size;
+        var rows = Blank(width, height);
+        Put(rows, 0, title, ConsoleColor.Cyan);
+        Put(rows, 1, "↑/↓ строки · PgUp/PgDn страницы · Esc закрыть", ConsoleColor.Gray);
+        for (int y = JournalHeaderHeight; y < height && top + y - JournalHeaderHeight < lines.Count; y++)
+            Put(rows, y, lines[top + y - JournalHeaderHeight], ConsoleColor.White);
         Present(rows, width, height, false);
     }
 

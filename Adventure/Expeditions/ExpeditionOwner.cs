@@ -24,9 +24,13 @@ public sealed class ExpeditionOwner : IDisposable
             if (existing != null)
             {
                 WasRestored = true;
-                _engine = Restore(existing.Payload);
+                var state = ReadState(existing.Payload);
+                int previousLayout = state.LayoutRevision;
+                _engine = new ExpeditionEngine(_world, state);
                 _saved = existing.Payload;
                 _revision = existing.Revision;
+                if (state.LayoutRevision != previousLayout)
+                    SaveCurrentState();
             }
             else
             {
@@ -82,14 +86,12 @@ public sealed class ExpeditionOwner : IDisposable
                 result = _engine.Apply(command);
                 if (result.Reply.Applied)
                 {
-                    byte[] payload = JsonSerializer.SerializeToUtf8Bytes(_engine.State);
-                    _revision = _store.Save(_world.Id, _revision, payload);
-                    _saved = payload;
+                    SaveCurrentState();
                 }
             }
             catch
             {
-                _engine = Restore(_saved);
+                _engine = new ExpeditionEngine(_world, ReadState(_saved));
                 throw;
             }
 
@@ -100,13 +102,19 @@ public sealed class ExpeditionOwner : IDisposable
         }
     }
 
-    private ExpeditionEngine Restore(byte[] payload)
+    private void SaveCurrentState()
+    {
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(_engine.State);
+        _revision = _store.Save(_world.Id, _revision, payload);
+        _saved = payload;
+    }
+
+    private static ExpeditionState ReadState(byte[] payload)
     {
         try
         {
-            var state = JsonSerializer.Deserialize<ExpeditionState>(payload)
+            return JsonSerializer.Deserialize<ExpeditionState>(payload)
                 ?? throw new InvalidDataException("Сохранение экспедиции пустое.");
-            return new ExpeditionEngine(_world, state);
         }
         catch (JsonException exception)
         {

@@ -25,6 +25,10 @@ public sealed partial class ExpeditionEngine
         _donors = Definition.Donors.ToDictionary(donor => donor.Position);
         State = state ?? CreateState(world.Id);
         ValidateState(world.Id);
+        if (state == null)
+            SurveyStartingBay();
+        else if (State.LayoutRevision < Definition.LayoutRevision)
+            MigrateLayout();
         RefreshVisibility(state == null);
     }
 
@@ -63,6 +67,8 @@ public sealed partial class ExpeditionEngine
         if (!result.Reply.Applied)
             return result;
 
+        if (command.Action is FlightAction.Move or FlightAction.CycleMode or FlightAction.SelectDrone)
+            State.AwaitingFirstSurvey = false;
         State.GameOver = State.Drones.Values.All(drone => !drone.Powered &&
             !(drone.Battery == null && _map.OnStation(drone.Position) && drone.Cargo.Any(module => module.Energy > 0)));
         RefreshVisibility(remember: true);
@@ -193,6 +199,8 @@ public sealed partial class ExpeditionEngine
         return new ExpeditionState
         {
             WorldId = worldId,
+            LayoutRevision = Definition.LayoutRevision,
+            AwaitingFirstSurvey = true,
             SelectedDroneId = Definition.StartDroneId,
             Laser = drones[Definition.StartDroneId].Position,
             Drones = drones,
@@ -209,7 +217,8 @@ public sealed partial class ExpeditionEngine
 
     private void ValidateState(Guid worldId)
     {
-        if (State.WorldId != worldId || !Enum.IsDefined(State.Mode) || !_map.IsValid(State.Laser) ||
+        if (State.WorldId != worldId || State.LayoutRevision < 0 || State.LayoutRevision > Definition.LayoutRevision ||
+            !Enum.IsDefined(State.Mode) || !_map.IsValid(State.Laser) ||
             !State.Drones.Keys.ToHashSet().SetEquals(_definitions.Keys) ||
             !State.Drones.TryGetValue(State.SelectedDroneId, out var selected) || !selected.Discovered ||
             !State.Donors.Keys.ToHashSet().SetEquals(Definition.Donors.Select(donor => donor.Id)))
@@ -246,6 +255,65 @@ public sealed partial class ExpeditionEngine
                 Equipment.Fits(module.Kind, EquipmentSlot.Battery) != (module.Capacity > 0))
                 throw new InvalidDataException("Сохранение содержит некорректный экземпляр оборудования.");
         }
+    }
+
+    private void MigrateLayout()
+    {
+        var selectedPosition = ActiveDrone.Position;
+        foreach (var drone in State.Drones.Values)
+        {
+            var items = StoryItems(drone);
+            if (CanKeepPosition(drone, items))
+                continue;
+
+            var position = drone.Position;
+            var map = Levels[position.LevelId].Map;
+            WorldPosition? nearest = null;
+            int distance = int.MaxValue;
+            for (int y = 0; y < map.Height; y++)
+            for (int x = 0; x < map.Width; x++)
+            {
+                var candidate = position with { X = x, Y = y };
+                int steps = Math.Abs(x - position.X) + Math.Abs(y - position.Y);
+                if (steps >= distance || _map.OnStation(candidate) || _map.Interior(candidate) != null ||
+                    !_map.CanEnter(candidate, drone.Id, items))
+                    continue;
+
+                nearest = candidate;
+                distance = steps;
+            }
+            drone.Position = nearest ?? throw new InvalidDataException(
+                $"Не удалось найти доступную позицию для {drone.Id} после обновления планировки.");
+        }
+        if (State.Mode == ControlMode.Combined && selectedPosition != ActiveDrone.Position)
+            State.Laser = ActiveDrone.Position;
+        State.LayoutRevision = Definition.LayoutRevision;
+    }
+
+    private bool CanKeepPosition(DroneState drone, IReadOnlyCollection<Item> items)
+    {
+        if (!_map.CanEnter(drone.Position, drone.Id, items))
+            return false;
+        if (!_map.OnStation(drone.Position))
+            return true;
+
+        var visited = new HashSet<WorldPosition> { drone.Position };
+        var queue = new Queue<WorldPosition>();
+        queue.Enqueue(drone.Position);
+        var directions = Enum.GetValues<Vector>();
+        while (queue.TryDequeue(out var position))
+        {
+            foreach (var direction in directions)
+            {
+                if (!_map.TryStep(position, direction, out var next) || !visited.Add(next) ||
+                    !_map.CanEnter(next, drone.Id, items))
+                    continue;
+                if (!_map.OnStation(next))
+                    return true;
+                queue.Enqueue(next);
+            }
+        }
+        return false;
     }
 
     private static List<Item> StoryItems(DroneState drone) => drone.Items.Select(kind => WorldContent.CreateItem(kind)!).ToList();

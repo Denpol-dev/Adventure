@@ -14,7 +14,7 @@ namespace Adventure.Tests
         [TestCase("N23S57", "2d147334362fd63db07e6fe1df71a05340ce929484428f407d556ef6d9306d89", 23)]
         [TestCase("N23S58", "a46e3f34f8fa66a0564188683b6783148855ea18facfbc316a7f85e38bee32fd", 0)]
         [TestCase("N24S55", "a46e3f34f8fa66a0564188683b6783148855ea18facfbc316a7f85e38bee32fd", 0)]
-        [TestCase("N24S56", "a46e3f34f8fa66a0564188683b6783148855ea18facfbc316a7f85e38bee32fd", 0)]
+        [TestCase("N24S56", "c37a0ebe858eabe90ed111fd56deff54ae575dda38dd851ff4f8ca6c9d9fd555", 18)]
         [TestCase("N24S57", "a46e3f34f8fa66a0564188683b6783148855ea18facfbc316a7f85e38bee32fd", 0)]
         [TestCase("N24S58", "c724b3d9fa9827ba083d4bf80660807f0221b3db5c2aee8376d03d0369dc7608", 1)]
         [TestCase("N25S55", "c43a17db82e92ccfa2a9bc2400e9902ea8039803d0967fd399c765f8b27a7cf3", 0)]
@@ -52,9 +52,9 @@ namespace Adventure.Tests
                 Assert.That(world.Levels, Has.Count.EqualTo(16));
                 Assert.That(world.Levels.Keys, Is.Unique);
                 Assert.That(definition.Levels.SelectMany(level => level.Objects).Select(obj => obj.Id), Is.Unique);
-                Assert.That(definition.Levels.Sum(level => level.Objects.Count), Is.EqualTo(65));
-                Assert.That(world.FirstLevel.Name, Is.EqualTo("N23S55"));
-                Assert.That((world.Start.X, world.Start.Y), Is.EqualTo((1, 4)));
+                Assert.That(definition.Levels.Sum(level => level.Objects.Count), Is.EqualTo(83));
+                Assert.That(world.FirstLevel.Name, Is.EqualTo("N24S56"));
+                Assert.That((world.Start.X, world.Start.Y), Is.EqualTo((43, 25)));
             });
 
             for (int y = 1; y <= 4; y++)

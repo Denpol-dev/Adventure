@@ -1,4 +1,5 @@
 using Adventure.Entities;
+using Adventure.Entities.Actors;
 using Adventure.Entities.Characters;
 using Adventure.Entities.Items;
 using Adventure.Entities.Worlds;
@@ -36,12 +37,106 @@ public sealed class ExpeditionTests
     public void APersonalGateAllowsOnlyTheAssignedDroneAndAClosedGateConsumesNoEnergy()
     {
         var engine = new ExpeditionEngine(Load());
-        Step(engine, FlightDirection.Right, 7);
-        Assert.That(engine.ActiveDrone.Position.X, Is.EqualTo(36));
+        Step(engine, FlightDirection.Top, 9);
+        Step(engine, FlightDirection.Left, 4);
+        Assert.That(engine.ActiveDrone.Position.X, Is.EqualTo(39));
+        Step(engine, FlightDirection.Right, 4);
         decimal energy = engine.ActiveDrone.Battery!.Energy;
         Assert.That(engine.Apply(Move(FlightDirection.Right)).Reply.Applied, Is.False);
         Assert.That(engine.ActiveDrone.Battery.Energy, Is.EqualTo(energy));
-        Assert.That(engine.ActiveDrone.Position.X, Is.EqualTo(36));
+        Assert.That(engine.ActiveDrone.Position.X, Is.EqualTo(43));
+    }
+
+    [Test]
+    public void StationHasSixteenSeparatedThreeCellBaysAndAnOutdoorStart()
+    {
+        var engine = new ExpeditionEngine(Load());
+        var station = engine.Definition.Station;
+        var level = engine.Levels[station.Origin.LevelId];
+        Assert.That((level.Name, level.Map.Width, level.Map.Height), Is.EqualTo(("N24S56", 100, 28)));
+        Assert.That(engine.ActiveDrone.Position, Is.EqualTo(new WorldPosition(level.Id, 43, 25)));
+        Assert.That(engine.OnStation, Is.False);
+        Assert.That(level.Map[43, 24].Symbol, Is.EqualTo('▢'));
+
+        foreach (var bay in station.Bays)
+        {
+            var terminal = station.At(bay.TerminalX, bay.ParkingY);
+            var parking = station.At(bay.ParkingX, bay.ParkingY);
+            var gate = station.At(bay.GateX, bay.GateY);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Math.Abs(terminal.X - gate.X), Is.EqualTo(2));
+                Assert.That((terminal.Y, parking.Y, gate.Y), Is.EqualTo((parking.Y, parking.Y, parking.Y)));
+                Assert.That((level.Map[terminal.X, terminal.Y].Symbol, level.Map[parking.X, parking.Y].Symbol,
+                    level.Map[gate.X, gate.Y].Symbol), Is.EqualTo(('░', '▢', '≈')));
+                Assert.That(level.Map[terminal.X, terminal.Y].VisibleActor, Is.TypeOf<Terminal>());
+                Assert.That(engine.State.Drones.Values.Any(drone => drone.Position == parking), Is.False);
+            });
+            foreach (int x in new[] { terminal.X, parking.X, gate.X })
+            {
+                Assert.That(level.Map[x, parking.Y - 1].CanEnter([]), Is.False);
+                Assert.That(level.Map[x, parking.Y + 1].CanEnter([]), Is.False);
+            }
+        }
+    }
+
+    [Test]
+    public void InitialSurveyKnowsBay01WithinTheOrbitalRadiusAndShowsOnlyTheStartLive()
+    {
+        var engine = new ExpeditionEngine(Load());
+        var station = engine.Definition.Station;
+        var bay = station.Bays.Single(candidate => candidate.Id == "BAY-01");
+        var parking = station.At(bay.ParkingX, bay.ParkingY);
+        var explored = engine.State.Explored[parking.LevelId];
+        var map = engine.Levels[parking.LevelId].Map;
+
+        Assert.That(engine.Definition.Balance.ScanRadius, Is.EqualTo(10));
+        Assert.That(engine.ViewCell(engine.ActiveDrone.Position),
+            Is.EqualTo(new CellView(CellVisibility.Visible, 'X', ConsoleColor.Cyan, "DR-01", true)));
+        Assert.That(engine.ViewCell(station.At(bay.TerminalX, bay.ParkingY)).Glyph, Is.EqualTo('░'));
+        Assert.That(engine.ViewCell(station.At(bay.GateX, bay.GateY)).Glyph, Is.EqualTo('≈'));
+        Assert.That(engine.ViewCell(parking).Visibility, Is.EqualTo(CellVisibility.Remembered));
+        Assert.That(engine.ViewCell(parking with { Y = parking.Y - 10 }).Glyph, Is.EqualTo('▒'));
+        Assert.That(engine.ViewCell(parking with { Y = parking.Y - 11 }).Visibility, Is.EqualTo(CellVisibility.Unknown));
+        Assert.That(engine.ViewCell(parking with { X = parking.X + 3 }).Visibility, Is.EqualTo(CellVisibility.Unknown));
+        Assert.That(explored.Keys.All(index =>
+        {
+            var position = new WorldPosition(parking.LevelId, index % map.Width, index / map.Width);
+            int dx = position.X - parking.X;
+            int dy = position.Y - parking.Y;
+            return position == engine.ActiveDrone.Position || dx * dx + dy * dy <= 100;
+        }), Is.True);
+    }
+
+    [Test]
+    public void BayDiagnosticsAndDispatcherLogAreReachableReadOnlyTerminals()
+    {
+        var engine = new ExpeditionEngine(Load());
+        Navigate(engine, "N24S56", 38, 16);
+        var bay = engine.Apply(new FlightCommand(FlightAction.Interact));
+        Assert.That(bay.Reply.Menu, Is.Null);
+        Assert.That(((Terminal)bay.Interaction!.Actor!).Message, Is.EqualTo("Назначенный дрон: DR-01."));
+
+        Navigate(engine, "N24S56", 56, 20);
+        for (int i = 0; i < 2; i++)
+        {
+            var response = engine.Apply(new FlightCommand(FlightAction.Interact));
+            Assert.That(response.Interaction!.Result, Is.EqualTo(InteractionResult.Action));
+            Assert.That(response.Reply.Menu, Is.Null);
+            var log = (Terminal)response.Interaction.Actor!;
+            Assert.Multiple(() =>
+            {
+                Assert.That(log.Name, Is.EqualTo("HAESEI / DRONE CONTROL"));
+                Assert.That(log.Icon, Is.EqualTo("░"));
+                Assert.That(log.LoadItem, Is.Null);
+                Assert.That(log.IsAlien, Is.False);
+                Assert.That(log.CompletesGame, Is.False);
+                Assert.That(log.Message, Does.Contain("Пак Минсу, старший диспетчер\n\nПарк: 16 дронов")
+                    .And.Contain("Рабочий день просто замечательный»."));
+            });
+        }
+        Assert.That(engine.ActiveDrone.Items, Is.Empty);
+        Assert.That(engine.State.TerminalUses["haesei-04-dispatch-log"], Is.EqualTo(2));
     }
 
     [Test]
@@ -123,6 +218,7 @@ public sealed class ExpeditionTests
         world.Levels.Single(level => level.Name == "N23S56").Cells.Add(
             new CellProperties { X = 27, Y = 12, BlocksScanning = true });
         var engine = new ExpeditionEngine(world);
+        engine = Relocate(world, engine.State, engine.StationTerminal);
         engine.ActiveDrone.Cargo.Add(new ModuleState("test-lidar", EquipmentKind.Lidar, 0, 0));
         Apply(engine, FlightAction.Install, id: "test-lidar", slot: EquipmentSlot.Lidar);
         Assert.That(engine.ActiveDrone.LidarScanned, Is.False);
@@ -136,7 +232,7 @@ public sealed class ExpeditionTests
         Assert.That(engine.ViewCell(floor with { X = 28 }).Visibility, Is.EqualTo(CellVisibility.Unknown));
         Assert.That(drone.Battery!.Energy, Is.EqualTo(energy - engine.Definition.Balance.WheelMove - engine.Definition.Balance.LidarScan));
 
-        engine = Relocate(world, engine.State, "N23S55", 35, 24);
+        engine = Relocate(world, engine.State, engine.StationTerminal);
         Apply(engine, FlightAction.Remove, slot: EquipmentSlot.Lidar);
         Assert.That(engine.ViewCell(floor).Visibility, Is.EqualTo(CellVisibility.Remembered));
         Assert.That(engine.ViewCell(floor).Glyph, Is.EqualTo('▢'));
@@ -179,7 +275,7 @@ public sealed class ExpeditionTests
     public void StationSalvageAndSwapsPreserveOwnershipWeightAndBatteryCharge()
     {
         var world = Load();
-        var engine = At(world, "N23S55", 36, 26);
+        var engine = At(world, "N24S56", 47, 26);
         var donor = engine.Definition.Donors.Single(donor => donor.Id == "DN-01");
         var drone = engine.ActiveDrone;
         var initial = drone.Battery!;
@@ -192,8 +288,7 @@ public sealed class ExpeditionTests
         Assert.That(engine.Apply(new FlightCommand(FlightAction.Install, Id: donor.Components[1].Id,
             Slot: nameof(EquipmentSlot.Battery))).Reply.Applied, Is.False);
 
-        Step(engine, FlightDirection.Top, 2);
-        Step(engine, FlightDirection.Left);
+        Navigate(engine, "N24S56", 41, 21);
         Assert.That(engine.Apply(new FlightCommand(FlightAction.Interact)).Reply.Menu, Is.EqualTo("station"));
         decimal previousEnergy = drone.Battery.Energy;
         Apply(engine, FlightAction.Install, id: donor.Components[1].Id, slot: EquipmentSlot.Battery);
@@ -210,7 +305,7 @@ public sealed class ExpeditionTests
     [Test]
     public void AReplacementThatWouldOverloadTheDroneKeepsBothModulesInPlace()
     {
-        var engine = At("N23S55", 35, 24);
+        var engine = At("N24S56", 41, 21);
         var drone = engine.ActiveDrone;
         drone.Slots[EquipmentSlot.Battery] = new ModuleState("large", EquipmentKind.HighCapacityBattery, 1600, 200);
         drone.Cargo.Add(new ModuleState("small", EquipmentKind.Battery, 1000, 100));
@@ -225,7 +320,7 @@ public sealed class ExpeditionTests
     [Test]
     public void BiometricAccessIsAnEquipmentCapability()
     {
-        var engine = At("N23S55", 35, 24);
+        var engine = At("N24S56", 41, 21);
         engine.ActiveDrone.Cargo.Add(new ModuleState("eye", EquipmentKind.BiometricEye, 0, 0));
         Assert.That(engine.ActiveDrone.HasBiometricAccess, Is.False);
         Apply(engine, FlightAction.Install, id: "eye", slot: EquipmentSlot.BiometricEye);
@@ -295,7 +390,10 @@ public sealed class ExpeditionTests
             WorldFiles.Save(path, world);
             var restored = WorldFiles.Load(path);
             var engine = new ExpeditionEngine(restored);
-            Assert.That(engine.Definition.Station.Rows, Is.EqualTo(world.Expedition!.Station.Rows));
+            Assert.That(engine.Definition.Station, Is.EqualTo(world.Expedition!.Station with { Bays = engine.Definition.Station.Bays }));
+            Assert.That(engine.Definition.Station.Bays, Is.EqualTo(world.Expedition.Station.Bays));
+            Assert.That(restored.Levels.Single(level => level.Name == "N24S56").Rows,
+                Is.EqualTo(world.Levels.Single(level => level.Name == "N24S56").Rows));
             Assert.That(engine.Definition.Interiors, Is.EqualTo(world.Expedition.Interiors));
             Assert.That(engine.ActiveDrone.Id, Is.EqualTo("DR-01"));
         }
@@ -360,18 +458,9 @@ public sealed class ExpeditionTests
 
         bool Passable(WorldPosition position)
         {
-            int sx = position.X - station.Origin.X;
-            int sy = position.Y - station.Origin.Y;
-            if (position.LevelId == station.Origin.LevelId && sy >= 0 && sy < station.Rows.Count &&
-                sx >= 0 && sx < station.Rows[sy].Length && station.Rows[sy][sx] != ' ')
-            {
-                return station.Rows[sy][sx] switch
-                {
-                    '▢' or 'T' => true,
-                    'G' => station.Bays.Any(bay => bay.DroneId == drone.Id && bay.GateX == sx && bay.GateY == sy),
-                    _ => false
-                };
-            }
+            if (station.Contains(position) && station.Bays.FirstOrDefault(
+                bay => station.At(bay.GateX, bay.GateY) == position) is { } gate)
+                return gate.DroneId == drone.Id;
             return engine.Levels[position.LevelId].Map[position.X, position.Y].CanEnter(items);
         }
     }
@@ -383,10 +472,14 @@ public sealed class ExpeditionTests
     internal static ExpeditionEngine At(WorldDefinition world, string level, int x, int y) =>
         Relocate(world, new ExpeditionEngine(world).State, level, x, y);
 
-    internal static ExpeditionEngine Relocate(WorldDefinition world, ExpeditionState state, string level, int x, int y)
+    internal static ExpeditionEngine Relocate(WorldDefinition world, ExpeditionState state, string level, int x, int y) =>
+        Relocate(world, state, new WorldPosition(world.Levels.Single(candidate => candidate.Name == level).Id, x, y));
+
+    internal static ExpeditionEngine Relocate(WorldDefinition world, ExpeditionState state, WorldPosition position)
     {
-        state.Laser = new WorldPosition(world.Levels.Single(candidate => candidate.Name == level).Id, x, y);
-        state.Drones[state.SelectedDroneId].Position = state.Laser;
+        state.AwaitingFirstSurvey = false;
+        state.Laser = position;
+        state.Drones[state.SelectedDroneId].Position = position;
         return new ExpeditionEngine(world, state);
     }
 
