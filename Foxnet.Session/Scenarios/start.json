@@ -1,0 +1,38 @@
+{
+  "contacts": [
+    { "id": "unknown", "nickname": "unknown" }
+  ],
+  "devices": [
+    {
+      "id": "n910vt",
+      "name": "N910VT",
+      "kind": "satellite",
+      "initiallyAvailable": true,
+      "credentials": {
+        "login": "fox_operator",
+        "password": "N910VT-relay"
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": "unknown-relay",
+      "contactId": "unknown",
+      "deliverOnStart": true,
+      "credentialDeviceId": "n910vt",
+      "text": "Как и просил, я примотал наш ретранслятор к старому спутнику. Можешь подключаться. Правда, потрепало его знатно. Жалобы не принимаю — остальные спутники вообще сбили. Имеем что имеем. Вот логин и пароль от фоксов.\n\nЛогин: {login}\nПароль: {password}",
+      "attachments": [
+        {
+          "eventId": "unknown-relay-access",
+          "title": "Доступ к N910VT",
+          "fileName": "N910VT.md",
+          "format": "markdown",
+          "text": "# Доступ к N910VT\n\nТип устройства — спутник.\n\n**Логин** — {login}\n\n**Пароль** — {password}"
+        }
+      ],
+      "replies": [
+        { "id": "received", "text": "Принято." }
+      ]
+    }
+  ]
+}

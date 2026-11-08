@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Foxnet.Desktop</AssemblyName>
+    <Product>FOXNET Desktop</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Markdig" Version="1.4.0" />
+    <ProjectReference Include="../Foxnet.Session/Foxnet.Session.csproj" />
+    <ProjectReference Include="../Adventure/Adventure.csproj" ReferenceOutputAssembly="false" Private="false"
+                      GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained;PublishSingleFile;PublishTrimmed" />
+  </ItemGroup>
+
+  <Target Name="CopyAdventureForDesktop" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <MSBuild Projects="../Adventure/Adventure.csproj" Targets="GetTargetPath"
+             RemoveProperties="RuntimeIdentifier;SelfContained;PublishSingleFile;PublishTrimmed">
+      <Output TaskParameter="TargetOutputs" ItemName="_AdventureTarget" />
+    </MSBuild>
+    <PropertyGroup>
+      <_AdventureOutput>@(_AdventureTarget->'%(RootDir)%(Directory)')</_AdventureOutput>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AdventureProgram Include="$(_AdventureOutput)Adventure.exe;$(_AdventureOutput)Adventure.dll;$(_AdventureOutput)Adventure.deps.json;$(_AdventureOutput)Adventure.runtimeconfig.json" />
+      <_AdventureWorld Include="$(_AdventureOutput)Worlds/**/*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AdventureProgram)" DestinationFolder="$(TargetDir)Console" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_AdventureWorld)" DestinationFiles="@(_AdventureWorld->'$(TargetDir)Console/Worlds/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishAdventureWithDesktop" AfterTargets="Publish">
+    <ItemGroup>
+      <_AdventureDistribution Include="$(TargetDir)Console/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AdventureDistribution)" DestinationFiles="@(_AdventureDistribution->'$(PublishDir)Console/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
