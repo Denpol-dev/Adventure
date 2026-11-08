@@ -13,8 +13,7 @@ namespace Adventure.Entities.Actors
 
         public override void Action()
         {
-            Console.SetCursorPosition(MessageX, MessageY);
-            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+            ConsoleView.ClearLine(MessageY);
             Random random = new();
             string message = "Сообщение: "; 
             switch (random.Next(0, 2))

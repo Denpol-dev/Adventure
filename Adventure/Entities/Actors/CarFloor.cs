@@ -13,8 +13,7 @@ namespace Adventure.Entities.Actors
 
         public override void Action()
         {
-            Console.SetCursorPosition(MessageX, MessageY);
-            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+            ConsoleView.ClearLine(MessageY);
             string message = "Сообщение: ";
             Console.WriteLine(message + "Пол грузовика.");
         }

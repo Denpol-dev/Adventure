@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "0e35dccd-2c16-56c1-a4e0-32de6a083905",
+  "start": {
+    "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+    "x": 1,
+    "y": 4
+  },
+  "levelFiles": [
+    "levels/N23S55.json",
+    "levels/N23S56.json",
+    "levels/N23S57.json",
+    "levels/N23S58.json",
+    "levels/N24S55.json",
+    "levels/N24S56.json",
+    "levels/N24S57.json",
+    "levels/N24S58.json",
+    "levels/N25S55.json",
+    "levels/N25S56.json",
+    "levels/N25S57.json",
+    "levels/N25S58.json",
+    "levels/N26S55.json",
+    "levels/N26S56.json",
+    "levels/N26S57.json",
+    "levels/N26S58.json"
+  ]
+}

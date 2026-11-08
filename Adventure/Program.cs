@@ -1,71 +1,45 @@
-﻿using Adventure.Entities.Characters;
-using Adventure.Entities.Levels;
-using Adventure;
-using System.Diagnostics;
-using System.Drawing;
-using System.Runtime.InteropServices;
+﻿using Adventure.Entities.Levels;
+using Adventure.Entities.Worlds;
 using System.Text;
-using Adventure.Entities;
 
 namespace Adventure
 {
     public class Program
     {
-        #region Import dll
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool SetConsoleOutputCP(uint wCodePageID);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool SetConsoleCP(uint wCodePageID);
-
-        #endregion
-
-        public Level Level { get; set; }
-        public Character Character { get; set; }
-
-        public void ChangeLevel(Level level, Character character, Vector vector)
+        public static int Main(string[] args)
         {
-            Level = level;
-            Console.Clear();
-            Console.BackgroundColor = level.LevelColor;
-            level.LoadMap(character);
-            int x = 0;
-            int y = 0;
-            switch (vector)
+            if (args.Length > 1)
             {
-                case Vector.Left:
-                    x = Level.Map.Width;
-                    y = character.Y;
-                    break;
-                case Vector.Right:
-                    x = 0;
-                    y = character.Y;
-                    break;
-                case Vector.Top:
-                    x = character.X;
-                    y = Level.Map.Height;
-                    break;
-                case Vector.Bottom:
-                    x = character.X;
-                    y = 3;
-                    break;
-                default:
-                    break;
+                Console.Error.WriteLine("Использование: Adventure [путь к world.json]");
+                return 1;
             }
-            character.SetCharacterOnMap(x, y);
-        }
 
-        public static void Main()
-        {
-            var program = new Program();
-            SetConsoleOutputCP(932);
-            SetConsoleCP(932);
-            Console.OutputEncoding = Encoding.Unicode;
+            InitLevels levels;
+            try
+            {
+                levels = new InitLevels(WorldFiles.Load(args.Length == 1 ? args[0] : WorldFiles.DefaultPath));
+            }
+            catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException)
+            {
+                Console.Error.WriteLine(exception.Message);
+                return 1;
+            }
 
-            Prologue.PrologueStart(true, true);
+            Console.InputEncoding = Encoding.UTF8;
+            Console.OutputEncoding = Encoding.UTF8;
+
+            Prologue.PrologueStart(false, true);
             Console.CursorVisible = false;
-            Game.StartGame(program);
+            try
+            {
+                Game.StartGame(levels);
+            }
+            finally
+            {
+                Console.CursorVisible = true;
+                Console.ResetColor();
+            }
+            return 0;
         }
     }
 }

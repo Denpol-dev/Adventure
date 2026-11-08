@@ -1,38 +1,26 @@
-﻿using Newtonsoft.Json;
-using System.IO;
+using Adventure.Entities.Worlds;
 
 namespace Adventure.Entities.Levels
 {
-    public class InitLevels
+    public sealed class InitLevels
     {
-        public Level FirstLevel { get; set; }
-
-        public Source Source { get; set; }
-
-        public InitLevels()
+        public InitLevels(WorldDefinition definition)
         {
-            Source = JsonConvert.DeserializeObject<Source>(File.ReadAllText(@"Sources\source.json")) ?? throw new Exception("Произошла ошибка при чтении файла");
-
-            var levels = Source.Levels;
-
-            foreach (var level in levels)
+            WorldValidator.Validate(definition);
+            var levels = definition.Levels.ToDictionary(level => level.Id, level => new Level(level));
+            foreach (var level in definition.Levels)
             {
-                level.InitDirections(
-                    levels.FirstOrDefault(l => l.LevelId == level.TopLevelId),
-                    levels.FirstOrDefault(l => l.LevelId == level.BottomLevelId),
-                    levels.FirstOrDefault(l => l.LevelId == level.LeftLevelId),
-                    levels.FirstOrDefault(l => l.LevelId == level.RightLevelId));
-                level.GenerateMap();
+                foreach (var (direction, neighbor) in level.Neighbors)
+                    levels[level.Id].Connect(direction, levels[neighbor]);
             }
 
-            FirstLevel = Source.Levels.First(l=> l.GlobalX == Source.StartX && l.GlobalY == Source.StartY);
+            Levels = levels;
+            Start = definition.Start;
+            FirstLevel = levels[Start.LevelId];
         }
-    }
 
-    public class Source
-    {
-        public int StartX { get; set; }
-        public int StartY { get; set; }
-        public List<Level> Levels { get; set; }
+        public IReadOnlyDictionary<Guid, Level> Levels { get; }
+        public DroneStart Start { get; }
+        public Level FirstLevel { get; }
     }
 }

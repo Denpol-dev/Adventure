@@ -1,171 +1,31 @@
-﻿using Adventure.Entities.Actors;
-using Adventure.Entities.Characters;
 using Adventure.Entities.Maps;
-using System.Text;
+using Adventure.Entities.Worlds;
 
 namespace Adventure.Entities.Levels
 {
-    public class Level
+    public sealed class Level
     {
-        public Guid LevelId { get; set; }
-        public string Name { get; set; }
+        private readonly Dictionary<Vector, Level> _neighbors = [];
 
-        public int GlobalX { get; set; }
-        public int GlobalY { get; set; }
-
-        public Guid? TopLevelId { get; set; }
-        public Level? TopLevel { get; set; }
-        public Guid? BottomLevelId { get; set; }
-        public Level? BottomLevel { get; set; }
-        public Guid? LeftLevelId { get; set; }
-        public Level? LeftLevel { get; set; }
-        public Guid? RightLevelId { get; set; }
-        public Level? RightLevel { get; set; }
-
-        public ConsoleColor LevelColor { get; set; }
-
-        public Guid MapId { get; set; }
-        public Map Map { get; set; }
-
-        public void InitDirections(
-            Level? topLevel,
-            Level? bottomLevel,
-            Level? leftLevel,
-            Level? rightLevel)
+        internal Level(LevelDefinition definition)
         {
-            TopLevel = topLevel;
-            BottomLevel = bottomLevel;
-            LeftLevel = leftLevel;
-            RightLevel = rightLevel;
+            Id = definition.Id;
+            Name = definition.Name;
+            GlobalX = definition.GlobalX;
+            GlobalY = definition.GlobalY;
+            Color = definition.Color;
+            Map = new Map(definition);
         }
 
-        public void LoadMap(Character character)
-        {
-            var map = Map;
-            Console.WriteLine("Квадрант " + Name);
-            LoadInventory(character);
-            Console.WriteLine("Сообщение: ");
-            foreach (var cell in map.Cells.Select(c => c.CellType))
-            {
-                var cellString = cell.Fill;
-                if (cellString == "I")
-                {
-                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Gray;
-                    Console.WriteLine(cell.Fill);
-                }
-                else
-                {
-                    Console.ForegroundColor = cell.Actor?.Color ?? ConsoleColor.Gray;
-                    Console.Write(cell.Fill);
-                }
-            }
-        }
+        public Guid Id { get; }
+        public string Name { get; }
+        public int GlobalX { get; }
+        public int GlobalY { get; }
+        public ConsoleColor Color { get; }
+        public Map Map { get; }
 
-        public static void LoadInventory(Character character)
-        {
-            if (character != null)
-            {
-                var sb = new StringBuilder();
-                var inventory = character.Inventory.Items;
-                if (inventory.Count > 0)
-                {
+        public Level? GetNeighbor(Vector direction) => _neighbors.GetValueOrDefault(direction);
 
-                    foreach (var item in inventory)
-                    {
-                        sb.Append(item.Name + ", ");
-                    }
-                    sb.Length -= 2;
-                    Console.WriteLine("Инвентарь: " + sb.ToString());
-                }
-                else
-                {
-                    Console.WriteLine("Инвентарь: ");
-                }
-            }
-        }
-
-        public void GenerateMap()
-        {
-            string sprite = Map.Sprite.Replace("\r", "").Replace("\n", "");
-            var map = new List<Cell>();
-            int stringIndex = 0;
-            int x = 0;
-            int y = 3;
-
-            foreach (var cell in sprite)
-            {
-                var cellString = cell.ToString();
-                if (cellString != "I")
-                {
-                    Actor? actor = cellString switch
-                    {
-                        "I" => null,
-                        "_" => null,
-                        "~" => null,
-                        "#" => new Stone(),
-                        "V" => new Bush(),
-                        "." => new Sand(),
-                        "+" => new WallCorner(),
-                        "-" => new WallHorizontal(),
-                        "|" => new WallVertical(),
-                        "/" => new WallObliqueRight(),
-                        @"\" => new WallObliqueLeft(),
-                        "▢" => new BunkerFloor(),
-                        "8" => new Rock(),
-                        "≈" => new ForceField(cellString),
-                        "*" => new ForceField(cellString),
-                        "▧" => new AlienFloor(),
-                        "▮" => new Table(),
-                        "□" => new CarFloor(),
-                        "©" => new Sign(cellString),
-                        "1" => new Terminal(cellString),
-                        "2" => new Terminal(cellString),
-                        "3" => new Terminal(cellString),
-                        "4" => new Terminal(cellString),
-                        "5" => new Terminal(cellString),
-                        "6" => new Terminal(cellString),
-                        "7" => new Terminal(cellString),
-                        "9" => new Terminal(cellString),
-                        "0" => new Terminal(cellString),
-                        "◬" => new Terminal(cellString),
-                        "◮" => new Terminal(cellString),
-                        "▣" => new Chest(cellString),
-                        "◊" => new Chest(cellString),
-                        ";" => new Chest(cellString),
-                        "e" => new Chest(cellString),
-                        _ => null
-                    };
-                    map.Add(new Cell()
-                    {
-                        X = x,
-                        Y = y,
-                        CellType = new CellType()
-                        {
-                            Fill = actor?.Icon ?? cellString,
-                            Actor = actor
-                        }
-                    });
-                    stringIndex++;
-                    x++;
-                }
-                else
-                {
-                    Actor? actor = null;
-                    map.Add(new Cell()
-                    {
-                        X = x,
-                        Y = y,
-                        CellType = new CellType()
-                        {
-                            Fill = actor?.Icon ?? cellString,
-                            Actor = actor
-                        }
-                    });
-                    x = 0;
-                    y++;
-                }
-            }
-            Map.Cells = map;
-        }
+        internal void Connect(Vector direction, Level neighbor) => _neighbors.Add(direction, neighbor);
     }
 }

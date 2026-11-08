@@ -1,28 +1,9 @@
-﻿using Adventure.Entities.Items;
+using Adventure.Entities.Items;
 
 namespace Adventure.Entities.Actors
 {
     public class Chest : Actor
     {
-        public Chest(string chest)
-        {
-            switch (chest)
-            {
-                case "▣":
-                    Inventory = new HardDriveXD23();
-                    break;
-                case "◊":
-                    Inventory = new ArtifactY66();
-                    break;
-                case ";":
-                    Inventory = new UniversalPass();
-                    break;
-                default:
-                    Inventory = null;
-                    break;
-            }
-        }
-
         public override string Name { get; set; } = "Ящик";
         public override string Icon { get; set; } = "▣";
         public override bool IsTakeble { get; set; } = true;
@@ -32,8 +13,7 @@ namespace Adventure.Entities.Actors
 
         public override void Action()
         {
-            Console.SetCursorPosition(MessageX, MessageY);
-            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+            ConsoleView.ClearLine(MessageY);
             string message = "Сообщение: ";
             if (Inventory != null)
             {
