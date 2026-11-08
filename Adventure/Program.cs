@@ -28,7 +28,7 @@ namespace Adventure
             Console.InputEncoding = Encoding.UTF8;
             Console.OutputEncoding = Encoding.UTF8;
 
-            Prologue.PrologueStart(false, true);
+            Prologue.PrologueStart(true, true);
             Console.CursorVisible = false;
             try
             {

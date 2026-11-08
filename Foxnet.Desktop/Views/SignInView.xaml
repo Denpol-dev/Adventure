@@ -1,0 +1,47 @@
+<UserControl x:Class="Foxnet.Desktop.Views.SignInView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             IsVisibleChanged="UpdateFocus">
+    <Border Style="{StaticResource Card}" Width="400" Padding="28"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel>
+            <Border Width="43" Height="43" CornerRadius="9" HorizontalAlignment="Left"
+                    Background="{DynamicResource AccentPanelBrush}">
+                <Path Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5" StrokeLineJoin="Round"
+                      Width="23" Height="23" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Data="M 0,1 L 5,4 L 10,4 L 15,1 L 14,10 L 7.5,15 L 1,10 Z M 4,8 L 6,9 M 11,8 L 9,9"/>
+            </Border>
+            <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" FontSize="24" Margin="0,12,0,18"/>
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SubmitCommand.IsRunning}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <StackPanel Visibility="{Binding ShowLogin, Converter={StaticResource BoolVisibility}}" Margin="0,0,0,12">
+                    <TextBlock Text="Логин" Margin="0,0,0,5"/>
+                    <TextBox x:Name="LoginEntry" Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
+                             AutomationProperties.Name="Логин" MaxLength="32"/>
+                </StackPanel>
+                <TextBlock Text="{Binding PasswordLabel}" Margin="0,0,0,5"/>
+                <PasswordBox x:Name="PasswordEntry" AutomationProperties.Name="{Binding PasswordLabel}" MaxLength="128"/>
+                <StackPanel Visibility="{Binding ShowConfirmation, Converter={StaticResource BoolVisibility}}" Margin="0,12,0,0">
+                    <TextBlock Text="Повторите новый пароль" Margin="0,0,0,5"/>
+                    <PasswordBox x:Name="ConfirmationEntry" AutomationProperties.Name="Повторите новый пароль" MaxLength="128"/>
+                </StackPanel>
+                <Button Content="{Binding ButtonLabel}" Style="{StaticResource PrimaryButton}"
+                        Margin="0,16,0,0" Click="Submit" IsDefault="True"/>
+            </StackPanel>
+            <ProgressBar Height="4" IsIndeterminate="True" Foreground="{DynamicResource AccentBrush}"
+                         Background="{DynamicResource RaisedBrush}" BorderThickness="0" Margin="0,12,0,0"
+                         Visibility="{Binding SubmitCommand.IsRunning, Converter={StaticResource BoolVisibility}}"/>
+            <Border Style="{StaticResource ErrorBanner}">
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>
