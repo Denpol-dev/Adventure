@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <None Update="Worlds/**/*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <ProjectReference Include="../Foxnet.Session/Foxnet.Session.csproj" />
   </ItemGroup>
 
 </Project>

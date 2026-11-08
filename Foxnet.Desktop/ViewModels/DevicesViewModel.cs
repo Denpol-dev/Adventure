@@ -1,13 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Foxnet.Session;
+using System.IO;
+using System.Text.Json;
 
 namespace Foxnet.Desktop.ViewModels;
 
-public sealed partial class DevicesViewModel : ScreenViewModel
+public sealed partial class DevicesViewModel : ScreenViewModel, IDisposable
 {
     private readonly LocalSession _session;
     private readonly DeviceConnectionService _connections;
+    private readonly ExpeditionPipeClient _expedition;
+    private ConsoleIdentity? _watched;
+    private CancellationTokenSource? _subscription;
+    private bool _disposed;
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsEmpty))] private IReadOnlyList<Device> _devices = [];
     [ObservableProperty]
@@ -20,11 +26,15 @@ public sealed partial class DevicesViewModel : ScreenViewModel
     [NotifyPropertyChangedFor(nameof(NotBusy))]
     [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(DisconnectCommand))]
     private bool _busy;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ExpeditionLabel), nameof(HasExpedition))]
+    private ExpeditionStatus? _expeditionStatus;
 
-    public DevicesViewModel(LocalSession session, DeviceConnectionService connections)
+    public DevicesViewModel(LocalSession session, DeviceConnectionService connections, string databasePath)
     {
         _session = session;
         _connections = connections;
+        _expedition = new ExpeditionPipeClient(databasePath);
         Refresh();
     }
 
@@ -37,6 +47,14 @@ public sealed partial class DevicesViewModel : ScreenViewModel
     public string ConnectionLabel => Selected?.Connected == true ? "Подключено" : "Отключено";
     public string AuthorizationLabel => Selected?.Authorized == true ? "Доступ подтверждён" : "Требуется авторизация";
     public string KindLabel => Selected?.Kind == "satellite" ? "Спутник" : Selected?.Kind ?? "";
+    public bool HasExpedition => ExpeditionStatus != null;
+    public string ExpeditionLabel => ExpeditionStatus switch
+    {
+        { GameOver: true } => "Экспедиция завершена",
+        { } status => $"{status.SelectedDroneId} · {status.Mode} · " +
+            $"{status.Drones.FirstOrDefault(drone => drone.Selected)?.ChargePercent ?? 0:0.#}%",
+        _ => ""
+    };
 
     public void Poll()
     {
@@ -117,11 +135,67 @@ public sealed partial class DevicesViewModel : ScreenViewModel
     private void Refresh()
     {
         var devices = _connections.GetDevices();
-        if (Devices.SequenceEqual(devices))
+        if (!Devices.SequenceEqual(devices))
+        {
+            string? selectedId = Selected?.Id;
+            Devices = devices;
+            Selected = devices.FirstOrDefault(device => device.Id == selectedId) ?? devices.FirstOrDefault();
+        }
+        ObserveExpedition(Selected?.Connection);
+    }
+
+    private void ObserveExpedition(ConsoleIdentity? connection)
+    {
+        if (_disposed || connection == _watched && _subscription != null)
             return;
 
-        string? selectedId = Selected?.Id;
-        Devices = devices;
-        Selected = devices.FirstOrDefault(device => device.Id == selectedId) ?? devices.FirstOrDefault();
+        _subscription?.Cancel();
+        _subscription = null;
+        _watched = connection;
+        ExpeditionStatus = null;
+        if (connection != null)
+        {
+            _subscription = new CancellationTokenSource();
+            _ = ReadExpeditionAsync(_subscription);
+        }
+    }
+
+    private async Task ReadExpeditionAsync(CancellationTokenSource subscription)
+    {
+        try
+        {
+            using var handshake = CancellationTokenSource.CreateLinkedTokenSource(subscription.Token);
+            handshake.CancelAfter(TimeSpan.FromSeconds(2));
+            var reply = await _expedition.RequestAsync(new ExpeditionRequest(ExpeditionRequestKind.Initialize), handshake.Token);
+            if (!ReferenceEquals(_subscription, subscription))
+                return;
+            ExpeditionStatus = reply.Status;
+            await foreach (var status in _expedition.WatchAsync(subscription.Token))
+            {
+                if (!ReferenceEquals(_subscription, subscription))
+                    break;
+                ExpeditionStatus = status;
+            }
+        }
+        catch (Exception exception) when (exception is IOException or TimeoutException or OperationCanceledException or
+                                           InvalidDataException or JsonException or UnauthorizedAccessException)
+        {
+        }
+        finally
+        {
+            if (ReferenceEquals(_subscription, subscription))
+            {
+                _subscription = null;
+                ExpeditionStatus = null;
+            }
+            subscription.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _subscription?.Cancel();
+        _subscription = null;
     }
 }

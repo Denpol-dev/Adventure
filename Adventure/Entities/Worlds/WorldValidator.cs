@@ -1,3 +1,5 @@
+using Adventure.Expeditions;
+
 namespace Adventure.Entities.Worlds
 {
     public static class WorldValidator
@@ -51,6 +53,8 @@ namespace Adventure.Entities.Worlds
                 first.Cells.FirstOrDefault(cell => cell.X == start.X && cell.Y == start.Y),
                 first.Objects.Where(obj => obj.X == start.X && obj.Y == start.Y));
             Require(cell.CanEnter([]), $"Квадрант {first.Name}: стартовая клетка непроходима.");
+            if (world.Expedition is { } expedition)
+                ExpeditionValidator.Validate(expedition, levels, buildings);
         }
 
         private static Dictionary<string, HashSet<string>> ValidateBuildings(List<BuildingDefinition> buildings)

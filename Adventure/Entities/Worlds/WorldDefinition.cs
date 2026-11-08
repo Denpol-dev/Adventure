@@ -1,3 +1,4 @@
+using Adventure.Expeditions;
 using System.Text.Json;
 
 namespace Adventure.Entities.Worlds
@@ -9,6 +10,7 @@ namespace Adventure.Entities.Worlds
         public required DroneStart Start { get; init; }
         public required List<LevelDefinition> Levels { get; init; }
         public List<BuildingDefinition> Buildings { get; init; } = [];
+        public ExpeditionDefinition? Expedition { get; init; }
         public Dictionary<string, JsonElement> Metadata { get; init; } = [];
     }
 

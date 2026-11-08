@@ -5,6 +5,7 @@ namespace Adventure.Entities.Characters
 {
     public sealed class Character
     {
+        private readonly HashSet<string> _looted = [];
         public Character(InitLevels levels)
         {
             Level = levels.FirstLevel;
@@ -55,39 +56,8 @@ namespace Adventure.Entities.Characters
             return result;
         }
 
-        public Interaction Interact()
-        {
-            var actor = Level.Map[X, Y].VisibleActor;
-            if (actor is Terminal { LoadItem: not null } terminal)
-            {
-                int index = Inventory.Items.FindIndex(item => item.GetType() == terminal.LoadItem.GetType());
-                if (index < 0)
-                {
-                    if (terminal.CompletesGame)
-                        return new(InteractionResult.None);
-
-                    bool hasOutput = Inventory.Items.Any(item => item.GetType() == terminal.Inventory?.GetType());
-                    return new(hasOutput ? InteractionResult.TerminalOff : InteractionResult.MissingItem);
-                }
-
-                Inventory.Items[index] = terminal.Inventory!;
-                return new(terminal.CompletesGame ? InteractionResult.Completed : InteractionResult.InventoryChanged, terminal);
-            }
-
-            if (actor is { IsTakeble: true, Inventory: not null })
-            {
-                var item = actor.Inventory;
-                if (Inventory.Items.Contains(item))
-                    return new(InteractionResult.EmptyChest);
-                if (Inventory.Items.Sum(existing => existing.Weight) + item.Weight > MaxWeight)
-                    return new(InteractionResult.Overweight);
-
-                Inventory.Items.Add(item);
-                return new(InteractionResult.InventoryChanged, actor);
-            }
-
-            return actor == null ? new(InteractionResult.None) : new(InteractionResult.Action, actor);
-        }
+        public Interaction Interact() =>
+            WorldInteraction.Apply(Level.Map[X, Y], Inventory.Items, MaxWeight, _looted);
     }
 
     public enum MoveResult { Moved, ChangedLevel, Blocked, NoNeighbor }

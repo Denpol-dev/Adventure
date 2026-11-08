@@ -125,7 +125,7 @@ public sealed class LocalSessionTests
         {
             connection.Open();
             using var command = connection.CreateCommand();
-            command.CommandText = "DROP TABLE player_account; PRAGMA user_version = 1;";
+            command.CommandText = "DROP TABLE expeditions; DROP TABLE player_account; PRAGMA user_version = 1;";
             command.ExecuteNonQuery();
         }
 

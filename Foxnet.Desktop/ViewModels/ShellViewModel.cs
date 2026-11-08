@@ -88,7 +88,7 @@ public sealed partial class ShellViewModel(string databasePath, string dataDirec
             Profile = new ProfileViewModel(session);
             Documents = new DocumentsViewModel(session.Documents, dataDirectory);
             Messages = new MessagesViewModel(session, OpenDocument);
-            Devices = new DevicesViewModel(session, new DeviceConnectionService(session, console));
+            Devices = new DevicesViewModel(session, new DeviceConnectionService(session, console), databasePath);
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
             _timer.Tick += OnTick;
             _timer.Start();
@@ -119,6 +119,7 @@ public sealed partial class ShellViewModel(string databasePath, string dataDirec
     public void Dispose()
     {
         _disposed = true;
+        Devices?.Dispose();
         if (_timer == null)
             return;
         _timer.Stop();
