@@ -1,26 +1,12 @@
-﻿using Adventure.Entities.Items;
+using Adventure.Entities.Items;
 
 namespace Adventure.Entities.Actors
 {
     public class ForceField : Actor
     {
-        public ForceField(string field)
+        public ForceField(Item pass)
         {
-            switch (field)
-            {
-                case "≈":
-                    Pass = new ArtifactY66();
-                    Color = ConsoleColor.Blue;
-                    break;
-                case "*":
-                    Pass = new UniversalPass();
-                    Color = ConsoleColor.Red;
-                    break;
-                default:
-                    Pass = new Key();
-                    break;
-            }
-
+            Pass = pass;
         }
 
         public override string Name { get; set; } = "Силовое поле";
@@ -33,8 +19,7 @@ namespace Adventure.Entities.Actors
 
         public override void Action()
         {
-            Console.SetCursorPosition(MessageX, MessageY);
-            Console.Write("\r" + new string(' ', Console.BufferWidth) + "\r");
+            ConsoleView.ClearLine(MessageY);
             string message = "Сообщение: ";
             Console.WriteLine(message + "Хм, получилось пройти. И этот артефакт начинает немного вибрировать...");
         }

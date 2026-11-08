@@ -4,6 +4,11 @@ namespace Adventure
 {
     public static class Prologue
     {
+        /// <summary>
+        /// Пролог, запускается перед основной игрой
+        /// </summary>
+        /// <param name="start">Начать с пролога</param>
+        /// <param name="realise">Режим релизного пролога</param>
         public static void PrologueStart(bool start, bool realise)
         {
             if (start)

@@ -1,0 +1,781 @@
+{
+  "schemaVersion": 1,
+  "id": "0e35dccd-2c16-56c1-a4e0-32de6a083905",
+  "start": {
+    "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+    "x": 1,
+    "y": 4
+  },
+  "levelFiles": [
+    "levels/N23S55.json",
+    "levels/N23S56.json",
+    "levels/N23S57.json",
+    "levels/N23S58.json",
+    "levels/N24S55.json",
+    "levels/N24S56.json",
+    "levels/N24S57.json",
+    "levels/N24S58.json",
+    "levels/N25S55.json",
+    "levels/N25S56.json",
+    "levels/N25S57.json",
+    "levels/N25S58.json",
+    "levels/N26S55.json",
+    "levels/N26S56.json",
+    "levels/N26S57.json",
+    "levels/N26S58.json"
+  ],
+  "buildings": [
+    {
+      "id": "supply-bunker",
+      "rooms": [
+        "stores"
+      ]
+    },
+    {
+      "id": "alien-site",
+      "rooms": [
+        "north",
+        "south"
+      ]
+    },
+    {
+      "id": "pass-vehicle",
+      "rooms": [
+        "cabin"
+      ]
+    },
+    {
+      "id": "relay-bunker",
+      "rooms": [
+        "north-west",
+        "north-east",
+        "south-west",
+        "south-east"
+      ]
+    }
+  ],
+  "expedition": {
+    "startDroneId": "DR-01",
+    "balance": {
+      "scanRadius": 10,
+      "wheelMove": 0.12,
+      "legMove": 0.18,
+      "lidarScan": 0.04,
+      "toolUse": 0.3,
+      "stationCharge": 75,
+      "batteryCapacity": 1000,
+      "highCapacityBatteryCapacity": 1600
+    },
+    "station": {
+      "id": "N23S55-service",
+      "origin": {
+        "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+        "x": 24,
+        "y": 1
+      },
+      "rows": [
+        "+---------------------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢▢▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+",
+        "|▢▢▢▢▢▢▢▢G▢▢▢G▢▢▢▢▢▢▢▢|",
+        "|▢▢▢▢▢▢▢▢|▢T▢|▢▢▢▢▢▢▢▢|",
+        "+--------+▢▢▢+--------+"
+      ],
+      "bays": [
+        {
+          "id": "BAY-01",
+          "droneId": "DR-01",
+          "gateX": 9,
+          "gateY": 1,
+          "parkingX": 5,
+          "parkingY": 1
+        },
+        {
+          "id": "BAY-02",
+          "droneId": "DR-02",
+          "gateX": 9,
+          "gateY": 4,
+          "parkingX": 5,
+          "parkingY": 4
+        },
+        {
+          "id": "BAY-03",
+          "droneId": "DR-03",
+          "gateX": 9,
+          "gateY": 7,
+          "parkingX": 5,
+          "parkingY": 7
+        },
+        {
+          "id": "BAY-04",
+          "droneId": "DR-04",
+          "gateX": 9,
+          "gateY": 10,
+          "parkingX": 5,
+          "parkingY": 10
+        },
+        {
+          "id": "BAY-05",
+          "droneId": "DR-05",
+          "gateX": 9,
+          "gateY": 13,
+          "parkingX": 5,
+          "parkingY": 13
+        },
+        {
+          "id": "BAY-06",
+          "droneId": "DR-06",
+          "gateX": 9,
+          "gateY": 16,
+          "parkingX": 5,
+          "parkingY": 16
+        },
+        {
+          "id": "BAY-07",
+          "droneId": "DR-07",
+          "gateX": 9,
+          "gateY": 19,
+          "parkingX": 5,
+          "parkingY": 19
+        },
+        {
+          "id": "BAY-08",
+          "droneId": "DR-08",
+          "gateX": 9,
+          "gateY": 22,
+          "parkingX": 5,
+          "parkingY": 22
+        },
+        {
+          "id": "BAY-09",
+          "droneId": "DR-09",
+          "gateX": 13,
+          "gateY": 1,
+          "parkingX": 17,
+          "parkingY": 1
+        },
+        {
+          "id": "BAY-10",
+          "droneId": "DR-10",
+          "gateX": 13,
+          "gateY": 4,
+          "parkingX": 17,
+          "parkingY": 4
+        },
+        {
+          "id": "BAY-11",
+          "droneId": "DR-11",
+          "gateX": 13,
+          "gateY": 7,
+          "parkingX": 17,
+          "parkingY": 7
+        },
+        {
+          "id": "BAY-12",
+          "droneId": "DR-12",
+          "gateX": 13,
+          "gateY": 10,
+          "parkingX": 17,
+          "parkingY": 10
+        },
+        {
+          "id": "BAY-13",
+          "droneId": "DR-13",
+          "gateX": 13,
+          "gateY": 13,
+          "parkingX": 17,
+          "parkingY": 13
+        },
+        {
+          "id": "BAY-14",
+          "droneId": "DR-14",
+          "gateX": 13,
+          "gateY": 16,
+          "parkingX": 17,
+          "parkingY": 16
+        },
+        {
+          "id": "BAY-15",
+          "droneId": "DR-15",
+          "gateX": 13,
+          "gateY": 19,
+          "parkingX": 17,
+          "parkingY": 19
+        },
+        {
+          "id": "BAY-16",
+          "droneId": "DR-16",
+          "gateX": 13,
+          "gateY": 22,
+          "parkingX": 17,
+          "parkingY": 22
+        }
+      ]
+    },
+    "drones": [
+      {
+        "id": "DR-01",
+        "name": "Рабочий 01",
+        "kind": "worker",
+        "position": {
+          "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+          "x": 29,
+          "y": 2
+        },
+        "color": "cyan",
+        "maxWeight": 10,
+        "batteryPercent": 28
+      },
+      {
+        "id": "DR-02",
+        "name": "Рабочий 02",
+        "kind": "worker",
+        "position": {
+          "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+          "x": 75,
+          "y": 12
+        },
+        "color": "yellow",
+        "maxWeight": 10,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-03",
+        "name": "Грузовой 03",
+        "kind": "cargo",
+        "position": {
+          "levelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d",
+          "x": 15,
+          "y": 21
+        },
+        "color": "magenta",
+        "maxWeight": 16,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-04",
+        "name": "Рабочий 04",
+        "kind": "worker",
+        "position": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 68,
+          "y": 10
+        },
+        "color": "green",
+        "maxWeight": 10,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-05",
+        "name": "Рабочий 05",
+        "kind": "worker",
+        "position": {
+          "levelId": "980a9779-bdd1-4f0b-b5a5-4960a9568c78",
+          "x": 52,
+          "y": 19
+        },
+        "color": "white",
+        "maxWeight": 10,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-06",
+        "name": "Грузовой 06",
+        "kind": "cargo",
+        "position": {
+          "levelId": "c652f675-fcd4-4ed2-8a5c-376f2f5b5982",
+          "x": 44,
+          "y": 14
+        },
+        "color": "blue",
+        "maxWeight": 16,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-07",
+        "name": "Рабочий 07",
+        "kind": "worker",
+        "position": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 48,
+          "y": 16
+        },
+        "color": "red",
+        "maxWeight": 10,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-08",
+        "name": "Рабочий 08",
+        "kind": "worker",
+        "position": {
+          "levelId": "865017db-20d0-4e7e-90d5-4b4af60ebd93",
+          "x": 61,
+          "y": 9
+        },
+        "color": "darkCyan",
+        "maxWeight": 10,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-09",
+        "name": "Грузовой 09",
+        "kind": "cargo",
+        "position": {
+          "levelId": "c03f7021-6897-4d55-880a-3a3bd60b22e1",
+          "x": 68,
+          "y": 10
+        },
+        "color": "darkYellow",
+        "maxWeight": 16,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-10",
+        "name": "Рабочий 10",
+        "kind": "worker",
+        "position": {
+          "levelId": "f947b175-a80e-4b8a-b5ae-c132756f2487",
+          "x": 61,
+          "y": 17
+        },
+        "color": "darkMagenta",
+        "maxWeight": 10,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-11",
+        "name": "Рабочий 11",
+        "kind": "worker",
+        "position": {
+          "levelId": "7c0350c1-e5ff-412d-b4b5-84996a2addc3",
+          "x": 42,
+          "y": 10
+        },
+        "color": "darkGreen",
+        "maxWeight": 10,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-12",
+        "name": "Грузовой 12",
+        "kind": "cargo",
+        "position": {
+          "levelId": "a6ae280a-a3d0-4ea3-a9f0-ef9d477e9645",
+          "x": 12,
+          "y": 19
+        },
+        "color": "darkBlue",
+        "maxWeight": 16,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-13",
+        "name": "Рабочий 13",
+        "kind": "worker",
+        "position": {
+          "levelId": "4f811014-93cf-42fc-bbcc-c85bf3d206ef",
+          "x": 79,
+          "y": 21
+        },
+        "color": "darkRed",
+        "maxWeight": 10,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-14",
+        "name": "Рабочий 14",
+        "kind": "worker",
+        "position": {
+          "levelId": "b3326b7f-2d58-48a9-9e30-3148fe2c6f5a",
+          "x": 39,
+          "y": 10
+        },
+        "color": "gray",
+        "maxWeight": 10,
+        "batteryPercent": 12
+      },
+      {
+        "id": "DR-15",
+        "name": "Грузовой 15",
+        "kind": "cargo",
+        "position": {
+          "levelId": "d88d418f-661a-4646-836c-326a69901e38",
+          "x": 62,
+          "y": 17
+        },
+        "color": "darkGray",
+        "maxWeight": 16,
+        "batteryPercent": 5
+      },
+      {
+        "id": "DR-16",
+        "name": "Рабочий 16",
+        "kind": "worker",
+        "position": {
+          "levelId": "9c0ab530-07b7-4eb0-bfd0-64a5a0b0822a",
+          "x": 79,
+          "y": 8
+        },
+        "color": "black",
+        "maxWeight": 10,
+        "batteryPercent": 12
+      }
+    ],
+    "donors": [
+      {
+        "id": "DN-01",
+        "name": "Неисправный дрон DN-01",
+        "position": {
+          "levelId": "3ca04c87-c654-4d86-9994-6b4a33eb1525",
+          "x": 36,
+          "y": 26
+        },
+        "components": [
+          {
+            "id": "DN-01-01",
+            "kind": "lidar",
+            "batteryPercent": 0
+          },
+          {
+            "id": "DN-01-02",
+            "kind": "battery",
+            "batteryPercent": 19
+          }
+        ]
+      },
+      {
+        "id": "DN-02",
+        "name": "Неисправный дрон DN-02",
+        "position": {
+          "levelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d",
+          "x": 8,
+          "y": 12
+        },
+        "components": [
+          {
+            "id": "DN-02-01",
+            "kind": "gripper",
+            "batteryPercent": 0
+          }
+        ]
+      },
+      {
+        "id": "DN-03",
+        "name": "Неисправный дрон DN-03",
+        "position": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 70,
+          "y": 15
+        },
+        "components": [
+          {
+            "id": "DN-03-01",
+            "kind": "biometricEye",
+            "batteryPercent": 0
+          }
+        ]
+      },
+      {
+        "id": "DN-04",
+        "name": "Неисправный дрон DN-04",
+        "position": {
+          "levelId": "980a9779-bdd1-4f0b-b5a5-4960a9568c78",
+          "x": 38,
+          "y": 14
+        },
+        "components": [
+          {
+            "id": "DN-04-01",
+            "kind": "legs",
+            "batteryPercent": 0
+          }
+        ]
+      },
+      {
+        "id": "DN-05",
+        "name": "Неисправный дрон DN-05",
+        "position": {
+          "levelId": "c652f675-fcd4-4ed2-8a5c-376f2f5b5982",
+          "x": 37,
+          "y": 8
+        },
+        "components": [
+          {
+            "id": "DN-05-01",
+            "kind": "hammer",
+            "batteryPercent": 0
+          },
+          {
+            "id": "DN-05-02",
+            "kind": "bodyModule",
+            "batteryPercent": 0
+          }
+        ]
+      },
+      {
+        "id": "DN-06",
+        "name": "Неисправный дрон DN-06",
+        "position": {
+          "levelId": "edf23e1b-5024-43b0-933b-b10d98b06a33",
+          "x": 62,
+          "y": 12
+        },
+        "components": [
+          {
+            "id": "DN-06-01",
+            "kind": "battery",
+            "batteryPercent": 8
+          }
+        ]
+      },
+      {
+        "id": "DN-07",
+        "name": "Неисправный дрон DN-07",
+        "position": {
+          "levelId": "865017db-20d0-4e7e-90d5-4b4af60ebd93",
+          "x": 28,
+          "y": 18
+        },
+        "components": [
+          {
+            "id": "DN-07-01",
+            "kind": "highCapacityBattery",
+            "batteryPercent": 14
+          }
+        ]
+      },
+      {
+        "id": "DN-08",
+        "name": "Неисправный дрон DN-08",
+        "position": {
+          "levelId": "c03f7021-6897-4d55-880a-3a3bd60b22e1",
+          "x": 35,
+          "y": 20
+        },
+        "components": [
+          {
+            "id": "DN-08-01",
+            "kind": "bodyModule",
+            "batteryPercent": 0
+          }
+        ]
+      },
+      {
+        "id": "DN-09",
+        "name": "Неисправный дрон DN-09",
+        "position": {
+          "levelId": "f947b175-a80e-4b8a-b5ae-c132756f2487",
+          "x": 29,
+          "y": 5
+        },
+        "components": []
+      },
+      {
+        "id": "DN-10",
+        "name": "Неисправный дрон DN-10",
+        "position": {
+          "levelId": "7c0350c1-e5ff-412d-b4b5-84996a2addc3",
+          "x": 79,
+          "y": 20
+        },
+        "components": [
+          {
+            "id": "DN-10-01",
+            "kind": "gripper",
+            "batteryPercent": 0
+          },
+          {
+            "id": "DN-10-02",
+            "kind": "battery",
+            "batteryPercent": 26
+          }
+        ]
+      },
+      {
+        "id": "DN-11",
+        "name": "Неисправный дрон DN-11",
+        "position": {
+          "levelId": "b3326b7f-2d58-48a9-9e30-3148fe2c6f5a",
+          "x": 30,
+          "y": 24
+        },
+        "components": [
+          {
+            "id": "DN-11-01",
+            "kind": "lidar",
+            "batteryPercent": 0
+          },
+          {
+            "id": "DN-11-02",
+            "kind": "bodyModule",
+            "batteryPercent": 0
+          }
+        ]
+      },
+      {
+        "id": "DN-12",
+        "name": "Неисправный дрон DN-12",
+        "position": {
+          "levelId": "9c0ab530-07b7-4eb0-bfd0-64a5a0b0822a",
+          "x": 77,
+          "y": 14
+        },
+        "components": [
+          {
+            "id": "DN-12-01",
+            "kind": "legs",
+            "batteryPercent": 0
+          },
+          {
+            "id": "DN-12-02",
+            "kind": "hammer",
+            "batteryPercent": 0
+          }
+        ]
+      }
+    ],
+    "interiors": [
+      {
+        "buildingId": "supply-bunker",
+        "roomId": "stores",
+        "origin": {
+          "levelId": "bfa19c92-4e3a-4257-bf18-d5f9b2082c4d",
+          "x": 25,
+          "y": 6
+        },
+        "width": 27,
+        "height": 13
+      },
+      {
+        "buildingId": "alien-site",
+        "roomId": "north",
+        "origin": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 24,
+          "y": 2
+        },
+        "width": 34,
+        "height": 9
+      },
+      {
+        "buildingId": "alien-site",
+        "roomId": "south",
+        "origin": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 24,
+          "y": 11
+        },
+        "width": 34,
+        "height": 12
+      },
+      {
+        "buildingId": "pass-vehicle",
+        "roomId": "cabin",
+        "origin": {
+          "levelId": "c03f7021-6897-4d55-880a-3a3bd60b22e1",
+          "x": 43,
+          "y": 13
+        },
+        "width": 3,
+        "height": 4
+      },
+      {
+        "buildingId": "relay-bunker",
+        "roomId": "north-west",
+        "origin": {
+          "levelId": "a6ae280a-a3d0-4ea3-a9f0-ef9d477e9645",
+          "x": 21,
+          "y": 13
+        },
+        "width": 79,
+        "height": 15
+      },
+      {
+        "buildingId": "relay-bunker",
+        "roomId": "north-east",
+        "origin": {
+          "levelId": "4f811014-93cf-42fc-bbcc-c85bf3d206ef",
+          "x": 0,
+          "y": 13
+        },
+        "width": 63,
+        "height": 15
+      },
+      {
+        "buildingId": "relay-bunker",
+        "roomId": "south-west",
+        "origin": {
+          "levelId": "61d042ae-bb64-4e05-a5c5-a93f6fcb6585",
+          "x": 21,
+          "y": 0
+        },
+        "width": 79,
+        "height": 20
+      },
+      {
+        "buildingId": "relay-bunker",
+        "roomId": "south-east",
+        "origin": {
+          "levelId": "9c0ab530-07b7-4eb0-bfd0-64a5a0b0822a",
+          "x": 0,
+          "y": 0
+        },
+        "width": 63,
+        "height": 20
+      },
+      {
+        "buildingId": "alien-site",
+        "roomId": "north",
+        "origin": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 34,
+          "y": 1
+        },
+        "width": 7,
+        "height": 1
+      },
+      {
+        "buildingId": "alien-site",
+        "roomId": "north",
+        "origin": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 20,
+          "y": 7
+        },
+        "width": 4,
+        "height": 1
+      },
+      {
+        "buildingId": "alien-site",
+        "roomId": "north",
+        "origin": {
+          "levelId": "ebe2f959-7341-4af3-805f-c4ae9b5fb009",
+          "x": 22,
+          "y": 8
+        },
+        "width": 2,
+        "height": 1
+      }
+    ]
+  }
+}

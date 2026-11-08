@@ -1,0 +1,172 @@
+<UserControl x:Class="Foxnet.Desktop.Views.MessagesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="ContactAvatar" TargetType="Border">
+            <Setter Property="Width" Value="37"/>
+            <Setter Property="Height" Value="37"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="{DynamicResource AccentPanelBrush}"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.52*" MinWidth="225"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Style="{StaticResource Card}" Padding="13">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="6,4,6,13">
+                    <TextBlock Text="Переписки" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="Локальная история" Style="{StaticResource MutedText}" FontSize="12" Margin="0,4,0,0"/>
+                </StackPanel>
+                <Grid>
+                    <ListBox ItemsSource="{Binding Conversations}" SelectedItem="{Binding Selected}"
+                             AutomationProperties.Name="Список переписок">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Style="{StaticResource ContactAvatar}" VerticalAlignment="Top">
+                                        <TextBlock Text="?" FontSize="19" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="9,0,4,0">
+                                        <TextBlock Text="{Binding Nickname}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding LastMessage}" Foreground="{DynamicResource MutedBrush}" FontSize="12"
+                                                   TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding Time}" Style="{StaticResource Eyebrow}" HorizontalAlignment="Right"/>
+                                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="9" MinWidth="19" Height="19"
+                                                HorizontalAlignment="Right" Margin="0,5,0,0"
+                                                Visibility="{Binding IsUnread, Converter={StaticResource BoolVisibility}}">
+                                            <TextBlock Text="{Binding UnreadCount}" FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentInkBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Text="Переписок пока нет." Style="{StaticResource MutedText}" Margin="6,5"
+                               Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}"/>
+                </Grid>
+            </DockPanel>
+        </Border>
+        <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+            <Grid>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="22" MaxWidth="300">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasSelection}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Border Width="50" Height="50" Background="{DynamicResource AccentPanelBrush}" CornerRadius="12">
+                        <TextBlock Text="&#xE715;" Style="{StaticResource Icon}" FontSize="21"/>
+                    </Border>
+                    <TextBlock Text="Откройте переписку" Style="{StaticResource SectionTitle}" TextAlignment="Center" Margin="0,14,0,5"/>
+                    <TextBlock Text="Выберите собеседника, чтобы прочитать сообщения и вложения."
+                               Style="{StaticResource MutedText}" TextAlignment="Center"/>
+                </StackPanel>
+                <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolVisibility}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="0,0,0,1" Padding="17,12">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource ContactAvatar}">
+                                <TextBlock Text="?" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Selected.Nickname}" FontSize="17" FontWeight="SemiBold"/>
+                                <TextBlock Text="СОБЕСЕДНИК" Style="{StaticResource Eyebrow}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="15,14"
+                                  x:Name="History" AutomationProperties.Name="История сообщений">
+                        <ItemsControl ItemsSource="{Binding Messages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="13,10" MaxWidth="690">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+                                                <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                <Setter Property="Margin" Value="0,0,30,10"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Outgoing}" Value="True">
+                                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                        <Setter Property="Background" Value="{DynamicResource AccentPanelBrush}"/>
+                                                        <Setter Property="Margin" Value="30,0,0,10"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <TextBox Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                                                     Background="Transparent" BorderBrush="Transparent" Padding="0"
+                                                     MinHeight="0" FontSize="14" AutomationProperties.Name="Текст сообщения"/>
+                                            <ItemsControl ItemsSource="{Binding Attachments}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}" ToolTip="Добавить вложение в библиотеку и открыть"
+                                                                HorizontalAlignment="Left" Margin="0,8,0,1" Padding="9,5">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xE723;" Style="{StaticResource Icon}" FontSize="13"/>
+                                                                <TextBlock Text="{Binding Title}" Margin="7,0,0,0" FontSize="13" TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <TextBlock Text="{Binding Time}" Style="{StaticResource Eyebrow}" Margin="1,6,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="0,1,0,0" Padding="15,9,15,13">
+                        <StackPanel>
+                            <StackPanel Visibility="{Binding HasReplies, Converter={StaticResource BoolVisibility}}">
+                                <TextBlock Text="ВАРИАНТЫ ОТВЕТА" Style="{StaticResource Eyebrow}" Margin="0,1,0,6"/>
+                                <ItemsControl ItemsSource="{Binding Replies}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding Text}" CommandParameter="{Binding}"
+                                                    Command="{Binding DataContext.ReplyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Style="{StaticResource PrimaryButton}" Margin="0,0,7,0"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Notice}" Style="{StaticResource NoticeText}"/>
+                            <Border Style="{StaticResource ErrorBanner}">
+                                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

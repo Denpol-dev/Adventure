@@ -1,33 +1,53 @@
-﻿using Adventure.Entities.Characters;
+using Adventure.Entities;
+using Adventure.Entities.Characters;
 using Adventure.Entities.Levels;
 
 namespace Adventure
 {
-    public class Game
+    public static class Game
     {
-        public static void StartGame(Program program)
+        public static void StartGame(InitLevels levels)
         {
-            Console.Clear();
+            var character = new Character(levels);
+            ConsoleView.DrawLevel(character);
 
-            var levels = new InitLevels();
-
-            program.Level = levels.Level11;
-            var level = program.Level;
-            Console.BackgroundColor = level.LevelColor;
-            program.Character = new Character(program);
-            level.LoadMap(program.Character);
-
-            var character = program.Character;
-            character.SetCharacterOnMap();
-
-            ConsoleKeyInfo key;
-            do
+            while (true)
             {
-                key = Console.ReadKey(true);
+                var key = Console.ReadKey(true).Key;
+                if (key == ConsoleKey.Escape)
+                    return;
+                if (key == ConsoleKey.E)
+                {
+                    ConsoleView.ShowInteraction(character, character.Interact());
+                    continue;
+                }
 
-                program.Character.DoAction(key.Key.ToString(), program.Level.GetMap());
+                Vector? direction = key switch
+                {
+                    ConsoleKey.W => Vector.Top,
+                    ConsoleKey.S => Vector.Bottom,
+                    ConsoleKey.A => Vector.Left,
+                    ConsoleKey.D => Vector.Right,
+                    _ => null
+                };
+                if (direction is not Vector movement)
+                    continue;
+
+                int previousX = character.X;
+                int previousY = character.Y;
+                switch (character.Move(movement))
+                {
+                    case MoveResult.Moved:
+                        ConsoleView.MoveCharacter(character, previousX, previousY);
+                        break;
+                    case MoveResult.ChangedLevel:
+                        ConsoleView.DrawLevel(character);
+                        break;
+                    case MoveResult.NoNeighbor:
+                        ConsoleView.ShowConnectionError();
+                        break;
+                }
             }
-            while (key.Key != ConsoleKey.Escape);
         }
     }
 }

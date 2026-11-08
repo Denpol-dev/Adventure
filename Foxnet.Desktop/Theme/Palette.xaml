@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="WindowBrush" Color="#0B1317"/>
+    <SolidColorBrush x:Key="RailBrush" Color="#101B20"/>
+    <SolidColorBrush x:Key="PanelBrush" Color="#141F25"/>
+    <SolidColorBrush x:Key="RaisedBrush" Color="#1B2A31"/>
+    <SolidColorBrush x:Key="InputBrush" Color="#0E181D"/>
+    <SolidColorBrush x:Key="StrokeBrush" Color="#2A3B42"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#EDF4F2"/>
+    <SolidColorBrush x:Key="MutedBrush" Color="#A4B8BA"/>
+    <SolidColorBrush x:Key="SoftBrush" Color="#869DA1"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#8CEBC4"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#A7F6D6"/>
+    <SolidColorBrush x:Key="AccentInkBrush" Color="#08251E"/>
+    <SolidColorBrush x:Key="AccentPanelBrush" Color="#19362F"/>
+    <SolidColorBrush x:Key="AccentStrokeBrush" Color="#39695B"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FFBABC"/>
+    <SolidColorBrush x:Key="ErrorPanelBrush" Color="#35232A"/>
+    <SolidColorBrush x:Key="ErrorStrokeBrush" Color="#634149"/>
+    <LinearGradientBrush x:Key="WorkspaceBrush" StartPoint="0,0" EndPoint="0.75,1">
+        <GradientStop Offset="0" Color="#112026"/>
+        <GradientStop Offset="0.72" Color="#0C151A"/>
+        <GradientStop Offset="1" Color="#0B1317"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="HeroBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#1C3838"/>
+        <GradientStop Offset="1" Color="#17282D"/>
+    </LinearGradientBrush>
+    <FontFamily x:Key="UiFont">Segoe UI</FontFamily>
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
+    <FontFamily x:Key="IconFont">Segoe MDL2 Assets</FontFamily>
+    <BooleanToVisibilityConverter x:Key="BoolVisibility"/>
+</ResourceDictionary>

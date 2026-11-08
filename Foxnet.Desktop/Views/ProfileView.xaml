@@ -1,0 +1,83 @@
+<UserControl x:Class="Foxnet.Desktop.Views.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="980" HorizontalAlignment="Stretch">
+            <Border Style="{StaticResource Card}" Background="{DynamicResource HeroBrush}"
+                    BorderBrush="{DynamicResource AccentStrokeBrush}" Padding="22,17" Margin="0,0,0,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="ПРОФИЛЬ ОПЕРАТОРА" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource AccentBrush}"/>
+                        <TextBlock Text="{Binding Nickname}" FontSize="27" FontWeight="SemiBold" Margin="0,4,0,3" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="Этот никнейм виден в интерфейсе FOXNET." Style="{StaticResource MutedText}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource Chip}" Background="{DynamicResource AccentPanelBrush}"
+                            VerticalAlignment="Top" Margin="12,0,0,0">
+                        <TextBlock Text="ЛОКАЛЬНЫЙ ПРОФИЛЬ" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource AccentBrush}"/>
+                    </Border>
+                </Grid>
+            </Border>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.9*" MinWidth="230"/>
+                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="1.2*"/>
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Аватар" Style="{StaticResource SectionTitle}"/>
+                        <Grid Width="100" Height="100" HorizontalAlignment="Left" Margin="0,14,0,14"
+                              AutomationProperties.Name="Аватар оператора">
+                            <Ellipse Fill="{DynamicResource AccentPanelBrush}" Stroke="{DynamicResource AccentStrokeBrush}" StrokeThickness="1"/>
+                            <Path Width="56" Height="56" Stretch="Uniform" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Data="M 3,5 L 19,15 L 37,15 L 53,5 L 49,35 L 28,51 L 7,35 Z M 3,5 L 13,30 L 28,43 L 43,30 L 53,5 M 13,30 L 21,27 M 43,30 L 35,27 M 25,39 L 31,39"/>
+                            <Ellipse>
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding Avatar}" Stretch="UniformToFill"/>
+                                </Ellipse.Fill>
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Avatar}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                        </Grid>
+                        <WrapPanel>
+                            <Button Content="Загрузить изображение" Command="{Binding PickAvatarCommand}" Margin="0,0,8,8"/>
+                            <Button Content="Восстановить" Command="{Binding ResetAvatarCommand}" Margin="0,0,0,8"
+                                    ToolTip="Вернуть стандартный аватар"/>
+                        </WrapPanel>
+                        <TextBlock Text="PNG, JPEG, BMP, GIF или TIFF · до 8 МБ" Style="{StaticResource MutedText}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Никнейм" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="От 2 до 32 символов." Style="{StaticResource MutedText}" Margin="0,6,0,14"/>
+                        <TextBox Text="{Binding NicknameDraft, UpdateSourceTrigger=PropertyChanged}" MaxLength="32"
+                                 AutomationProperties.Name="Никнейм">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SaveNicknameCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Content="Сохранить никнейм" Style="{StaticResource PrimaryButton}" Command="{Binding SaveNicknameCommand}"
+                                HorizontalAlignment="Left" Margin="0,11,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <TextBlock Text="{Binding Notice}" Style="{StaticResource NoticeText}"/>
+            <Border Style="{StaticResource ErrorBanner}">
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
