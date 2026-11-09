@@ -28,7 +28,7 @@ public sealed partial class ProfileViewModel : ScreenViewModel
     {
         _session.Rename(NicknameDraft);
         Nickname = NicknameDraft = NicknameDraft.Trim();
-        Notice = "Никнейм сохранён.";
+        Notice = "Никнейм сохранен.";
     });
 
     [RelayCommand]
@@ -49,7 +49,7 @@ public sealed partial class ProfileViewModel : ScreenViewModel
             var image = AvatarImages.Load(png);
             _session.SetAvatar(png);
             Avatar = image;
-            Notice = "Аватар обновлён.";
+            Notice = "Аватар обновлен.";
         });
     }
 

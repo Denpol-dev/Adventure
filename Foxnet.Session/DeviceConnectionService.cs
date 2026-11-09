@@ -23,7 +23,7 @@ public sealed class DeviceConnectionService(LocalSession session, IConsoleHost c
         {
             var device = Reconcile(session.GetDevice(deviceId));
             if (!device.Authorized)
-                throw new InvalidOperationException("Доступ не подтверждён.");
+                throw new InvalidOperationException("Доступ не подтвержден.");
             if (device.Connection != null)
                 return device;
 

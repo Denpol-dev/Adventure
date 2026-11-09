@@ -2,9 +2,9 @@ using Microsoft.Data.Sqlite;
 
 namespace Foxnet.Session;
 
-internal sealed class SessionDatabase(string path)
+internal sealed partial class SessionDatabase(string path)
 {
-    private const int SchemaVersion = 3;
+    private const int SchemaVersion = 4;
     private readonly string _path = Path.GetFullPath(path);
 
     public SqliteConnection Open()
@@ -68,14 +68,17 @@ internal sealed class SessionDatabase(string path)
             );
             """);
 
-        Execute(connection, transaction, """
+        if (version < 3)
+            Execute(connection, transaction, """
             CREATE TABLE expeditions (
                 world_id TEXT PRIMARY KEY NOT NULL,
                 revision INTEGER NOT NULL CHECK(revision >= 1),
                 payload BLOB NOT NULL
             );
-            PRAGMA user_version = 3;
             """);
+
+        CreateWorldSchema(connection, transaction);
+        Execute(connection, transaction, "PRAGMA user_version = 4;");
     }
 
     private static void CreateInitialSchema(SqliteConnection connection, SqliteTransaction transaction)

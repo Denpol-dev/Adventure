@@ -124,6 +124,7 @@ public sealed class LocalSessionTests
         using (var connection = new SqliteConnection($"Data Source={_database};Pooling=False"))
         {
             connection.Open();
+            RemoveWorldSchema(connection);
             using var command = connection.CreateCommand();
             command.CommandText = "DROP TABLE expeditions; DROP TABLE player_account; PRAGMA user_version = 1;";
             command.ExecuteNonQuery();
@@ -194,7 +195,7 @@ public sealed class LocalSessionTests
     [Test]
     public void ConfiguredReplyCanDeliverAMessageAndUnlockADeviceInTheSameAction()
     {
-        var baseScenario = Scenario.LoadDefault();
+        var baseScenario = LegacyScenario();
         var seed = baseScenario.Messages.Single();
         var device = baseScenario.Devices.Single() with { InitiallyAvailable = false };
         var scenario = baseScenario with
@@ -340,9 +341,49 @@ public sealed class LocalSessionTests
 
     private LocalSession Open(Scenario? scenario = null)
     {
-        var session = new LocalSession(_database, scenario ?? Scenario.LoadDefault());
+        var session = new LocalSession(_database, scenario ?? LegacyScenario());
         session.Initialize();
         return session;
+    }
+
+    internal static Scenario LegacyScenario()
+    {
+        var current = Scenario.LoadDefault();
+        var seed = current.Messages.Single(message => message.Id == "unknown-relay");
+        return new Scenario([new ContactDefinition("unknown", "unknown")], current.Devices,
+            [seed with
+            {
+                DeliverOnStart = true,
+                Text = "Доступ к спутнику.\n\nЛогин: {login}\nПароль: {password}",
+                Replies = [new ReplyDefinition("received", "Принято.", null, null)],
+                Facts = null
+            }]);
+    }
+
+    internal static void RemoveWorldSchema(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DROP TABLE corporate_pressure;
+            DROP TABLE world_settings;
+            DROP TABLE notifications;
+            DROP TABLE value_sales;
+            DROP TABLE registered_values;
+            DROP TABLE payment_requests;
+            DROP TABLE contract_payments;
+            DROP TABLE npc_ledger;
+            DROP TABLE bank_entries;
+            DROP TABLE npc_wallets;
+            DROP TABLE player_wallet;
+            DROP TABLE story_events;
+            DROP TABLE story_flags;
+            DROP TABLE independent_replies;
+            DROP TABLE contact_history;
+            DROP TABLE contact_facts;
+            DROP TABLE contact_state;
+            PRAGMA user_version = 3;
+            """;
+        command.ExecuteNonQuery();
     }
 
     private (LocalSession Session, string DeviceId) AuthorizedSession()

@@ -24,6 +24,7 @@ public sealed class ExpeditionIntegrationTests
         var desktop = new LocalSession(Database, Scenario.LoadDefault());
         desktop.Initialize();
         desktop.CreateAccount("Pilot-17", "test-password");
+        desktop.EnterWorkspace();
         desktop.SetAvatar([1, 2, 3]);
         var message = desktop.OpenConversation("unknown").Single();
         desktop.Documents.AddFromAttachment(message.Attachments.Single().EventId);
@@ -34,7 +35,27 @@ public sealed class ExpeditionIntegrationTests
         {
             connection.Open();
             using var sql = connection.CreateCommand();
-            sql.CommandText = "DROP TABLE expeditions; PRAGMA user_version = 2;";
+            sql.CommandText = """
+                DROP TABLE corporate_pressure;
+                DROP TABLE world_settings;
+                DROP TABLE notifications;
+                DROP TABLE value_sales;
+                DROP TABLE registered_values;
+                DROP TABLE payment_requests;
+                DROP TABLE contract_payments;
+                DROP TABLE npc_ledger;
+                DROP TABLE bank_entries;
+                DROP TABLE npc_wallets;
+                DROP TABLE player_wallet;
+                DROP TABLE story_events;
+                DROP TABLE story_flags;
+                DROP TABLE independent_replies;
+                DROP TABLE contact_history;
+                DROP TABLE contact_facts;
+                DROP TABLE contact_state;
+                DROP TABLE expeditions;
+                PRAGMA user_version = 2;
+                """;
             sql.ExecuteNonQuery();
         }
 

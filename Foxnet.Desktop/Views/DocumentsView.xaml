@@ -79,6 +79,9 @@
                             <Button Content="Открыть в системе" Command="{Binding OpenExternallyCommand}"
                                     Visibility="{Binding CanOpenExternally, Converter={StaticResource BoolVisibility}}"
                                     HorizontalAlignment="Left" Margin="0,10,0,0" MinHeight="32" FontSize="12" Padding="11,5"/>
+                            <Button Content="Передать материал" Command="{Binding SendMaterialCommand}" Style="{StaticResource PrimaryButton}"
+                                    Visibility="{Binding HasOffer, Converter={StaticResource BoolVisibility}}"
+                                    HorizontalAlignment="Left" Margin="0,10,0,0"/>
                             <TextBlock Text="{Binding Notice}" Style="{StaticResource NoticeText}"/>
                             <Border Style="{StaticResource ErrorBanner}">
                                 <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>

@@ -103,6 +103,30 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE715;" Style="{StaticResource Icon}" Width="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                                 <TextBlock Text="Сообщения" Margin="9,0,0,0" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <Border Style="{StaticResource Chip}" Margin="7,0,0,0" Padding="4,0"
+                                        Visibility="{Binding HasUnreadMessages, Converter={StaticResource BoolVisibility}}">
+                                    <TextBlock Text="{Binding UnreadMessages}" Foreground="{DynamicResource AccentBrush}" FontSize="11"/>
+                                </Border>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource NavButton}" AutomationProperties.Name="Контакты"
+                                Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Page.Contacts}"
+                                Tag="{Binding Page, Converter={StaticResource PageMatch}, ConverterParameter=Contacts}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE716;" Style="{StaticResource Icon}" Width="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <TextBlock Text="Контакты" Margin="9,0,0,0" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource NavButton}" AutomationProperties.Name="HAESEI Bank"
+                                Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Page.Bank}"
+                                Tag="{Binding Page, Converter={StaticResource PageMatch}, ConverterParameter=Bank}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE825;" Style="{StaticResource Icon}" Width="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <TextBlock Text="HAESEI Bank" Margin="9,0,0,0" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <Border Style="{StaticResource Chip}" Margin="7,0,0,0" Padding="4,0"
+                                        Visibility="{Binding HasBankEvents, Converter={StaticResource BoolVisibility}}">
+                                    <TextBlock Text="{Binding BankEvents}" Foreground="{DynamicResource AccentBrush}" FontSize="11"/>
+                                </Border>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource NavButton}" AutomationProperties.Name="FOXNET Device"
@@ -113,6 +137,8 @@
                                 <TextBlock Text="FOXNET Device" Margin="9,0,0,0" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                             </StackPanel>
                         </Button>
+                        <CheckBox Content="Звук уведомлений" IsChecked="{Binding SoundEnabled}" Margin="9,16,0,0"
+                                  Foreground="{DynamicResource MutedBrush}"/>
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -126,6 +152,7 @@
                         <TextBlock Text="{Binding SectionCode}" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource AccentBrush}"/>
                         <TextBlock Text="{Binding Title}" FontSize="33" FontWeight="SemiBold" Margin="0,4,0,3"/>
                         <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}" FontSize="14.5"/>
+                        <TextBlock Text="{Binding WorldError}" Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Grid Grid.Row="1">
                         <views:ProfileView DataContext="{Binding Profile}"
@@ -134,6 +161,10 @@
                                              Visibility="{Binding DataContext.Page, ElementName=Shell, Converter={StaticResource PageMatch}, ConverterParameter=Documents}"/>
                         <views:MessagesView DataContext="{Binding Messages}"
                                             Visibility="{Binding DataContext.Page, ElementName=Shell, Converter={StaticResource PageMatch}, ConverterParameter=Messages}"/>
+                        <views:ContactsView DataContext="{Binding Contacts}"
+                                            Visibility="{Binding DataContext.Page, ElementName=Shell, Converter={StaticResource PageMatch}, ConverterParameter=Contacts}"/>
+                        <views:BankView DataContext="{Binding Bank}"
+                                        Visibility="{Binding DataContext.Page, ElementName=Shell, Converter={StaticResource PageMatch}, ConverterParameter=Bank}"/>
                         <views:DevicesView DataContext="{Binding Devices}"
                                            Visibility="{Binding DataContext.Page, ElementName=Shell, Converter={StaticResource PageMatch}, ConverterParameter=Devices}"/>
                     </Grid>

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Foxnet.Desktop.Services;
 using Foxnet.Session;
+using System.Windows;
 using System.Windows.Documents;
 
 namespace Foxnet.Desktop.ViewModels;
@@ -9,6 +10,7 @@ namespace Foxnet.Desktop.ViewModels;
 public sealed partial class DocumentsViewModel : ScreenViewModel
 {
     private readonly DocumentLibrary _library;
+    private readonly LocalSession _session;
     private readonly string _dataDirectory;
     private LibraryDocument? _opened;
 
@@ -16,10 +18,12 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSelection))] private DocumentRow? _selected;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasPreview))] private FlowDocument? _preview;
     [ObservableProperty] private bool _canOpenExternally;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasOffer))] private TradeOffer? _offer;
 
-    public DocumentsViewModel(DocumentLibrary library, string dataDirectory)
+    public DocumentsViewModel(LocalSession session, string dataDirectory)
     {
-        _library = library;
+        _session = session;
+        _library = session.Documents;
         _dataDirectory = dataDirectory;
         Refresh();
     }
@@ -27,6 +31,7 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
     public bool IsEmpty => Documents.Count == 0;
     public bool HasSelection => Selected != null;
     public bool HasPreview => Preview != null;
+    public bool HasOffer => Offer != null;
 
     public void Open(string eventId)
     {
@@ -39,6 +44,7 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
     partial void OnSelectedChanged(DocumentRow? value) => Run(() =>
     {
         _opened = null;
+        Offer = null;
         Preview = null;
         CanOpenExternally = false;
         if (value == null)
@@ -47,6 +53,28 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
         _opened = _library.Get(value.Info.EventId) ?? throw new InvalidOperationException("Документ отсутствует в библиотеке.");
         CanOpenExternally = ExternalDocument.CanOpen(_opened.Info);
         (Preview, Notice) = DocumentPreview.Create(_opened);
+        RefreshOffer();
+    });
+
+    public void RefreshOffer() => Offer = _opened == null ? null : _session.GetDocumentOffer(_opened.Info.EventId);
+
+    [RelayCommand]
+    private void SendMaterial() => Run(() =>
+    {
+        if (Offer is not { } offer)
+            return;
+        var appraisal = BankViewModel.Format(offer.Appraisal);
+        var choice = MessageBox.Show(Application.Current.MainWindow,
+            $"Передать материал контакту «{offer.Buyer}»?\n\nОценка: {appraisal}. Выплата может оказаться неполной или нулевой. Передача необратима.",
+            "Передача материала", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+        if (choice != MessageBoxResult.Yes)
+            return;
+        var result = _session.TransferValue(Guid.NewGuid(), offer.Id, offer.BuyerId);
+        RefreshOffer();
+        if (result.Error == TradeError.None)
+            Notice = $"Материал передан. Выплата: {BankViewModel.Format(result.Paid)}.";
+        else
+            Error = "Передача недоступна.";
     });
 
     [RelayCommand]

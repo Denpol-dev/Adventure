@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Foxnet.Session;
 using System.Collections.ObjectModel;
+using System.Windows.Threading;
 
 namespace Foxnet.Desktop.ViewModels;
 
@@ -9,15 +10,22 @@ public sealed partial class MessagesViewModel : ScreenViewModel
 {
     private readonly LocalSession _session;
     private readonly Action<string> _openDocument;
+    private readonly Action<string> _openDossier;
+    private readonly Func<bool> _isVisible;
+    private readonly DispatcherTimer _typingTimer = new();
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSelection))] private ConversationRow? _selected;
     [ObservableProperty] private IReadOnlyList<MessageRow> _messages = [];
+    [ObservableProperty] private bool _isTyping;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasReplies))] private IReadOnlyList<ReplyOption> _replies = [];
 
-    public MessagesViewModel(LocalSession session, Action<string> openDocument)
+    public MessagesViewModel(LocalSession session, Action<string> openDocument, Action<string> openDossier, Func<bool> isVisible)
     {
         _session = session;
         _openDocument = openDocument;
+        _openDossier = openDossier;
+        _isVisible = isVisible;
+        _typingTimer.Tick += OnTypingTimerTick;
         RefreshConversations();
     }
 
@@ -30,8 +38,27 @@ public sealed partial class MessagesViewModel : ScreenViewModel
     {
         Messages = [];
         Replies = [];
+        _typingTimer.Stop();
+        IsTyping = false;
         if (value != null)
-            Run(RefreshThread);
+            Run(() => RefreshThread(markRead: _isVisible()));
+    }
+
+    public void OpenContact(string id) => Selected = Conversations.FirstOrDefault(row => row.Id == id);
+
+    public void Refresh(bool markRead)
+    {
+        if (Selected == null)
+            RefreshConversations();
+        else
+            RefreshThread(markRead);
+    }
+
+    [RelayCommand]
+    private void OpenDossier()
+    {
+        if (Selected is { } selected)
+            _openDossier(selected.Id);
     }
 
     [RelayCommand]
@@ -40,8 +67,8 @@ public sealed partial class MessagesViewModel : ScreenViewModel
         if (option == null)
             return;
         bool sent = _session.SelectReply(option.MessageId, option.Id);
-        RefreshThread();
-        Notice = sent ? "Ответ отправлен." : "Этот ответ уже недоступен.";
+        RefreshThread(markRead: true);
+        Notice = !sent ? "Этот ответ уже недоступен." : option.Silent ? "Сообщение оставлено без ответа." : "Ответ отправлен.";
     });
 
     [RelayCommand]
@@ -54,25 +81,48 @@ public sealed partial class MessagesViewModel : ScreenViewModel
         _openDocument(document.Info.EventId);
     });
 
-    private void RefreshThread()
+    private void RefreshThread(bool markRead)
     {
         if (Selected == null)
             return;
-        var history = _session.OpenConversation(Selected.Id);
-        Messages = history.Select(message => new MessageRow(message)).ToArray();
-        Replies = history.SelectMany(message => message.Replies).ToArray();
+        var history = _session.OpenConversation(Selected.Id, markRead);
+        RefreshTyping(Selected.Id);
+        if (!Messages.Select(row => row.Message.Id).SequenceEqual(history.Select(message => message.Id)))
+            Messages = history.Select(message => new MessageRow(message)).ToArray();
+        var replies = history.SelectMany(message => message.Replies).ToArray();
+        if (!Replies.SequenceEqual(replies))
+            Replies = replies;
         RefreshConversations();
+    }
+
+    private void RefreshTyping(string contactId)
+    {
+        _typingTimer.Stop();
+        var delay = _session.GetContactTypingDelay(contactId);
+        IsTyping = delay == TimeSpan.Zero;
+        if (delay is { } remaining && remaining > TimeSpan.Zero)
+        {
+            _typingTimer.Interval = remaining;
+            _typingTimer.Start();
+        }
+    }
+
+    private void OnTypingTimerTick(object? sender, EventArgs args)
+    {
+        _typingTimer.Stop();
+        IsTyping = true;
     }
 
     private void RefreshConversations()
     {
         var conversations = _session.GetConversations();
+        var contacts = _session.GetContacts().ToDictionary(contact => contact.Id);
         for (int index = 0; index < conversations.Count; index++)
         {
             var conversation = conversations[index];
             var row = Conversations.FirstOrDefault(existing => existing.Id == conversation.Id);
             if (row == null)
-                Conversations.Insert(index, new ConversationRow(conversation));
+                Conversations.Insert(index, new ConversationRow(conversation, contacts.GetValueOrDefault(conversation.Id)?.Avatar));
             else
             {
                 row.Model = conversation;
@@ -85,7 +135,7 @@ public sealed partial class MessagesViewModel : ScreenViewModel
     }
 }
 
-public sealed partial class ConversationRow(Conversation model) : ObservableObject
+public sealed partial class ConversationRow(Conversation model, string? avatar) : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastMessage), nameof(UnreadCount), nameof(IsUnread), nameof(Time))]
@@ -93,6 +143,7 @@ public sealed partial class ConversationRow(Conversation model) : ObservableObje
 
     public string Id => Model.Id;
     public string Nickname => Model.Nickname;
+    public string? Avatar => avatar;
     public string LastMessage => Model.LastMessage.ReplaceLineEndings(" ");
     public int UnreadCount => Model.UnreadCount;
     public bool IsUnread => UnreadCount > 0;
