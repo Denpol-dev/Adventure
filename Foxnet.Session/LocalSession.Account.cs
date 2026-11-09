@@ -41,7 +41,7 @@ public sealed partial class LocalSession
         using var connection = _database.Open();
         using var transaction = connection.BeginTransaction();
         if (ReadAccount(connection, transaction) != null)
-            throw new InvalidOperationException("Профиль уже защищён паролем.");
+            throw new InvalidOperationException("Профиль уже защищен паролем.");
 
         Execute(connection, transaction, """
             INSERT INTO profile(singleton, id, nickname) VALUES(1, $id, $login)

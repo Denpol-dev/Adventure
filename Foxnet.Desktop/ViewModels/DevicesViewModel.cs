@@ -45,7 +45,7 @@ public sealed partial class DevicesViewModel : ScreenViewModel, IDisposable
     public bool ShowConnect => Selected is { Authorized: true, Connected: false };
     public bool ShowDisconnect => Selected is { Connected: true };
     public string ConnectionLabel => Selected?.Connected == true ? "Подключено" : "Отключено";
-    public string AuthorizationLabel => Selected?.Authorized == true ? "Доступ подтверждён" : "Требуется авторизация";
+    public string AuthorizationLabel => Selected?.Authorized == true ? "Доступ подтвержден" : "Требуется авторизация";
     public string KindLabel => Selected?.Kind == "satellite" ? "Спутник" : Selected?.Kind ?? "";
     public bool HasExpedition => ExpeditionStatus != null;
     public string ExpeditionLabel => ExpeditionStatus switch

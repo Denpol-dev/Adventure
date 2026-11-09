@@ -7,7 +7,7 @@ public sealed record Conversation(string Id, string Nickname, string LastMessage
 public sealed record Message(string Id, string ContactId, string Text, DateTimeOffset SentAt, bool Outgoing,
     IReadOnlyList<Attachment> Attachments, IReadOnlyList<ReplyOption> Replies);
 
-public sealed record ReplyOption(string MessageId, string Id, string Text);
+public sealed record ReplyOption(string MessageId, string Id, string Text, bool Silent = false);
 
 public sealed record Attachment(string EventId, string Title, string FileName, DocumentFormat Format);
 

@@ -42,14 +42,14 @@ public abstract partial class ScreenViewModel : ObservableObject
     internal static bool IsDisplayable(Exception exception) =>
         exception is IOException or InvalidDataException or SqliteException or UnauthorizedAccessException
             or ArgumentException or InvalidOperationException or Win32Exception or NotSupportedException
-            or FormatException or System.Text.Json.JsonException or System.Runtime.InteropServices.COMException;
+            or FormatException or OverflowException or System.Text.Json.JsonException or System.Runtime.InteropServices.COMException;
 
     internal static string Explain(Exception exception) => exception switch
     {
         SqliteException { SqliteErrorCode: 11 or 26 } => "Локальная база сессии повреждена. Существующие данные оставлены на диске.",
         SqliteException => "Не удалось обратиться к локальной базе сессии. " + exception.Message,
         DecoderFallbackException => "Не удалось прочитать кодировку текстового документа.",
-        FileFormatException or NotSupportedException => "Формат файла повреждён или не поддерживается.",
+        FileFormatException or NotSupportedException => "Формат файла поврежден или не поддерживается.",
         _ => exception.Message
     };
 }

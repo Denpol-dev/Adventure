@@ -25,6 +25,9 @@ public partial class MessagesView : UserControl
     private void OnMessagesChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MessagesViewModel.Messages))
-            Dispatcher.InvokeAsync(History.ScrollToEnd, DispatcherPriority.Loaded);
+        {
+            Action scroll = sender is MessagesViewModel { Messages.Count: 1 } ? History.ScrollToTop : History.ScrollToEnd;
+            Dispatcher.InvokeAsync(scroll, DispatcherPriority.Loaded);
+        }
     }
 }

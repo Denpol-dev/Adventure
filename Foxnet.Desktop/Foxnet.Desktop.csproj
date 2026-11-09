@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Assets/*" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Markdig" Version="1.4.0" />
     <ProjectReference Include="../Foxnet.Session/Foxnet.Session.csproj" />

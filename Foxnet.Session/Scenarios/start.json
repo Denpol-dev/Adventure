@@ -1,6 +1,81 @@
 {
   "contacts": [
-    { "id": "unknown", "nickname": "unknown" }
+    {
+      "id": "unknown",
+      "nickname": "unknown",
+      "details": {
+        "name": null,
+        "age": null,
+        "organization": null,
+        "summary": "Предоставил данные для доступа к N910VT.",
+        "avatar": null,
+        "initialBalance": 3600,
+        "creditsPerMinute": 22,
+        "requestLimit": 100
+      }
+    },
+    {
+      "id": "journalist",
+      "nickname": "Со Ен-хи",
+      "details": {
+        "name": "Со Ен-хи",
+        "age": 25,
+        "organization": "Независимая журналистка-расследователь",
+        "summary": "Расследует исчезновение колонии и деятельность HAESEI.",
+        "avatar": "journalist.jpg",
+        "initialBalance": 900,
+        "creditsPerMinute": 0,
+        "requestLimit": 80,
+        "valueKind": "document",
+        "resaleMin": 110,
+        "resaleMax": 160
+      }
+    },
+    {
+      "id": "ivan",
+      "nickname": "Иван Валиев",
+      "details": {
+        "name": "Иван Валиев",
+        "age": null,
+        "organization": "Независимый торговец",
+        "summary": "Покупает физические ценности, доставленные на орбиту.",
+        "avatar": "ivan.png",
+        "initialBalance": 1000,
+        "creditsPerMinute": 0,
+        "requestLimit": 120,
+        "valueKind": "physicalItem",
+        "resaleMin": 140,
+        "resaleMax": 200
+      }
+    },
+    {
+      "id": "security",
+      "nickname": "Владимир Дубинин",
+      "details": {
+        "name": "Владимир Дубинин",
+        "age": null,
+        "organization": "Служба безопасности HAESEI",
+        "summary": "Представитель корпоративной безопасности.",
+        "avatar": "security.png",
+        "initialBalance": 8400,
+        "creditsPerMinute": 35,
+        "requestLimit": 0
+      }
+    },
+    {
+      "id": "director",
+      "nickname": "Ли Чон-су",
+      "details": {
+        "name": "Ли Чон-су",
+        "age": null,
+        "organization": "HAESEI Industries",
+        "summary": "Генеральный директор HAESEI.",
+        "avatar": "director.png",
+        "initialBalance": 42000,
+        "creditsPerMinute": 75,
+        "requestLimit": 0
+      }
+    }
   ],
   "devices": [
     {
@@ -18,21 +93,379 @@
     {
       "id": "unknown-relay",
       "contactId": "unknown",
-      "deliverOnStart": true,
-      "credentialDeviceId": "n910vt",
-      "text": "Как и просил, я примотал наш ретранслятор к старому спутнику. Можешь подключаться. Правда, потрепало его знатно. Жалобы не принимаю — остальные спутники вообще сбили. Имеем что имеем. Вот логин и пароль от фоксов.\n\nЛогин: {login}\nПароль: {password}",
+      "text": "Как и просил, ретранслятор подключен к N910VT. Спутник потрепало, но работает. Остальные вообще сбили.\n\nКреды в документе.\n\nТеперь по оплате. Цена изменилась. С тебя 10к.\n\nЗапрос отправил в HAESEI Bank. Жду перевод",
       "attachments": [
         {
           "eventId": "unknown-relay-access",
           "title": "Доступ к N910VT",
           "fileName": "N910VT.md",
           "format": "markdown",
-          "text": "# Доступ к N910VT\n\nТип устройства — спутник.\n\n**Логин** — {login}\n\n**Пароль** — {password}"
+          "text": "# Доступ к N910VT\n\nТип устройства - спутник.\n\n**Логин** - {login}\n\n**Пароль** - {password}"
         }
       ],
       "replies": [
-        { "id": "received", "text": "Принято." }
+        {
+          "id": "dispute",
+          "text": "Мы договаривались на 3к, я и так тебе 1,5к закинул уже.",
+          "nextMessageId": "unknown-dispute",
+          "action": "dispute"
+        },
+        {
+          "id": "refuse",
+          "text": "У меня денег нет, так что теперь ты без оплаты",
+          "nextMessageId": "unknown-refused",
+          "action": "refuse"
+        },
+        {
+          "id": "defer",
+          "text": "Дай мне отсрочку",
+          "nextMessageId": "unknown-deferred",
+          "action": "defer"
+        }
+      ],
+      "credentialDeviceId": "n910vt",
+      "facts": [
+        {
+          "id": "n910vt-access",
+          "text": "Передал рабочие данные для доступа к N910VT.",
+          "source": "Доступ к N910VT",
+          "confidence": "confirmed"
+        },
+        {
+          "id": "n910vt-relay",
+          "text": "Утверждает, что подключил ретранслятор к N910VT.",
+          "source": "Сообщение unknown",
+          "confidence": "statement"
+        }
       ]
+    },
+    {
+      "id": "unknown-invoice",
+      "contactId": "unknown",
+      "text": "Теперь по оплате. Цена изменилась. С тебя 10к.\n\nЗапрос отправил в HAESEI Bank. Жду перевод",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "dispute",
+          "text": "Мы договаривались на 3к, я и так тебе 1,5к закинул уже.",
+          "nextMessageId": "unknown-dispute",
+          "action": "dispute"
+        },
+        {
+          "id": "refuse",
+          "text": "У меня денег нет, так что теперь ты без оплаты",
+          "nextMessageId": "unknown-refused",
+          "action": "refuse"
+        },
+        {
+          "id": "defer",
+          "text": "Дай мне отсрочку",
+          "nextMessageId": "unknown-deferred",
+          "action": "defer"
+        }
+      ],
+      "history": "Предъявлено новое требование об оплате подключения N910VT."
+    },
+    {
+      "id": "unknown-dispute",
+      "contactId": "unknown",
+      "text": "Мы договаривались, что это будет легкая прогулка. А мне пришлось путать следы от орбитальной обороны.\n\nУ меня две дыры в фюзеляже, между прочим! Ты думаешь, ремонт мне бесплатно сделают?\n\nТак что плати за мое беспокойство. И за то, что тебя до сих пор не нашли",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "refuse",
+          "text": "У меня денег нет, так что теперь ты без оплаты",
+          "nextMessageId": "unknown-refused",
+          "action": "refuse"
+        },
+        {
+          "id": "defer",
+          "text": "Дай мне отсрочку",
+          "nextMessageId": "unknown-deferred",
+          "action": "defer"
+        }
+      ],
+      "facts": [
+        {
+          "id": "relay-damage",
+          "text": "Утверждает, что его корабль получил повреждения.",
+          "source": "Сообщение unknown",
+          "confidence": "statement"
+        }
+      ],
+      "history": "Оспорены новые условия оплаты."
+    },
+    {
+      "id": "unknown-refused",
+      "contactId": "unknown",
+      "text": "Хорошо.\n\nТогда о твоих делишках узнают другие.\n\nНе пиши мне больше",
+      "attachments": [],
+      "replies": [],
+      "history": "Отказ от оплаты, угроза и блокировка."
+    },
+    {
+      "id": "unknown-deferred",
+      "contactId": "unknown",
+      "text": "Пять минут.\n\nНайдешь деньги - переведешь. Не найдешь - это уже не моя проблема.\n\nИ да, не трать время на уговоры",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "plea-1",
+          "text": "Я найду деньги, только не сдавай меня",
+          "action": "plea",
+          "independent": true
+        },
+        {
+          "id": "plea-2",
+          "text": "Давай хотя бы договоримся о части суммы",
+          "action": "plea",
+          "independent": true
+        },
+        {
+          "id": "plea-3",
+          "text": "У меня действительно нет 10 000 ¢",
+          "action": "plea",
+          "independent": true
+        },
+        {
+          "id": "plea-4",
+          "text": "Ответь, пожалуйста",
+          "action": "plea",
+          "independent": true
+        },
+        {
+          "id": "plea-5",
+          "text": "Ты же понимаешь, чем мне это грозит?",
+          "action": "plea",
+          "independent": true
+        }
+      ],
+      "history": "Предоставлена отсрочка на пять минут."
+    },
+    {
+      "id": "unknown-expired",
+      "contactId": "unknown",
+      "text": "Время вышло.\n\nПисьма уже в пути. Надеюсь, оно того стоило.\n\nУдачи тебе со спутником",
+      "attachments": [],
+      "replies": [],
+      "history": "Отсрочка истекла. unknown сообщил о передаче сведений и заблокировал игрока."
+    },
+    {
+      "id": "unknown-reminder",
+      "contactId": "unknown",
+      "text": "Ты там уснул?\n\nЯ не шучу. Со мной такие номера не проходят.\n\nНе будет денег - передам информацию тем, кому очень интересно, кто копается в этом спутнике",
+      "attachments": [],
+      "replies": [],
+      "history": "Напоминание об оплате и предупреждение о передаче сведений."
+    },
+    {
+      "id": "unknown-paid",
+      "contactId": "unknown",
+      "text": "Перевод получил. На этом расчет закончен. Про спутник от меня никто не услышит.",
+      "attachments": [],
+      "replies": [],
+      "history": "Получение оплаты подтверждено."
+    },
+    {
+      "id": "journalist-intro",
+      "contactId": "journalist",
+      "text": "Здравствуйте. Меня зовут Со Ен-хи.\n\nЯ журналистка. Последние несколько месяцев я занимаюсь исчезновением колонии и тем, как HAESEI пытается замять эту историю.\n\nДо меня дошла информация, что кому-то удалось восстановить доступ к одному из старых спутников.\n\nНе знаю, кто вы, и не собираюсь спрашивать.\n\nЕсли у вас действительно есть доступ к данным с поверхности, я предлагаю сотрудничество. Мне нужны документы, записи, любые свидетельства того, что произошло.\n\nИ да, я готова платить за полезную информацию. Немного, но честно.\n\nЕсли интересует - можем вместе вывести их на чистую воду.",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "accept",
+          "text": "Спасибо за предложение. Готов сотрудничать.",
+          "nextMessageId": "journalist-intro-response-1",
+          "relationship": "accept"
+        },
+        {
+          "id": "clarify",
+          "text": "Какие материалы вам нужны и как мы договоримся об оплате?",
+          "nextMessageId": "journalist-intro-response-2",
+          "relationship": "clarify"
+        },
+        {
+          "id": "later",
+          "text": "Пока я не готов сотрудничать.",
+          "nextMessageId": "journalist-intro-response-3",
+          "relationship": "later"
+        }
+      ],
+      "facts": [
+        {
+          "id": "investigation",
+          "text": "Расследует исчезновение колонии и ищет свидетельства с поверхности.",
+          "source": "Первое сообщение",
+          "confidence": "statement"
+        }
+      ]
+    },
+    {
+      "id": "ivan-intro",
+      "contactId": "ivan",
+      "text": "Дарова\n\nНаш общий знакомый рассказал, чем ты там занимаешься. Говорит ты можешь подсобить мне.\n\nУ меня корабль неподалеку болтается, только вот садиться туда я не собираюсь. Мне моя шкура дороже. А на планете наверняка добра полно осталось.\n\nЕсли сможешь оживить космический лифт, я бы с удовольствием забирал всякий хлам. Деньгами не обижу.\n\nЧто скажешь?",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "accept",
+          "text": "Мне интересно. Буду иметь тебя в виду.",
+          "nextMessageId": "ivan-intro-response-1",
+          "relationship": "accept"
+        },
+        {
+          "id": "clarify",
+          "text": "Что берешь и как платишь?",
+          "nextMessageId": "ivan-intro-response-2",
+          "relationship": "clarify"
+        },
+        {
+          "id": "later",
+          "text": "Пока не готов этим заниматься.",
+          "nextMessageId": "ivan-intro-response-3",
+          "relationship": "later"
+        }
+      ],
+      "facts": [
+        {
+          "id": "orbital-trade",
+          "text": "Предлагает забирать физические ценности на орбите.",
+          "source": "Первое сообщение",
+          "confidence": "statement"
+        }
+      ]
+    },
+    {
+      "id": "security-intro",
+      "contactId": "security",
+      "text": "Служба безопасности HAESEI.\n\nЗафиксирована несанкционированная активность, связанная с объектами нашей компании.\n\nТребуем немедленно прекратить доступ к корпоративной инфраструктуре.\n\nВаши действия нарушают условия использования оборудования и применимые нормы законодательства.\n\nВ случае продолжения деятельности мы примем необходимые меры для установления личности оператора и привлечения его к ответственности",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "accept",
+          "text": "О каких объектах идет речь?",
+          "nextMessageId": "security-intro-response-1"
+        },
+        {
+          "id": "ignore",
+          "text": "Оставить без ответа",
+          "silent": true
+        },
+        {
+          "id": "later",
+          "text": "На каком основании вы мне угрожаете?",
+          "nextMessageId": "security-intro-response-3"
+        }
+      ],
+      "facts": [
+        {
+          "id": "identity",
+          "text": "HAESEI пытается установить личность оператора.",
+          "source": "Предупреждение службы безопасности",
+          "confidence": "statement"
+        }
+      ],
+      "history": "Получено требование службы безопасности HAESEI."
+    },
+    {
+      "id": "journalist-intro-response-1",
+      "contactId": "journalist",
+      "text": "Если найдете ценный материал, пришлите его через FOXNET. Я проверю источник и оплачу то, что смогу.",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "journalist-intro-response-2",
+      "contactId": "journalist",
+      "text": "Нужны подлинные документы о работе колонии. Сначала я проверю материал, затем смогу его оплатить.",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "journalist-intro-response-3",
+      "contactId": "journalist",
+      "text": "Понимаю. Если передумаете, напишите.",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "resume",
+          "text": "Я готов вернуться к разговору о сотрудничестве.",
+          "nextMessageId": "journalist-intro-response-1",
+          "relationship": "accept"
+        }
+      ]
+    },
+    {
+      "id": "ivan-intro-response-1",
+      "contactId": "ivan",
+      "text": "Договорились. Когда лифт заработает и груз будет на орбите, сможем торговать.",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "ivan-intro-response-2",
+      "contactId": "ivan",
+      "text": "Ценное железо и оборудование. За груз на орбите плачу, сколько могу на момент сделки.",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "ivan-intro-response-3",
+      "contactId": "ivan",
+      "text": "Без проблем. Если надумаешь, дай знать.",
+      "attachments": [],
+      "replies": [
+        {
+          "id": "resume",
+          "text": "Я передумал. Давай обсудим работу.",
+          "nextMessageId": "ivan-intro-response-1",
+          "relationship": "accept"
+        }
+      ]
+    },
+    {
+      "id": "security-intro-response-1",
+      "contactId": "security",
+      "text": "Вы получили уведомление. Дополнительных сведений мы не предоставляем.",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "security-intro-response-3",
+      "contactId": "security",
+      "text": "Прекратите доступ к инфраструктуре HAESEI. Повторного предупреждения не будет.",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "ivan-partial",
+      "contactId": "ivan",
+      "text": "Слушай, извини. У меня сейчас больше денег нет. Все, что было, перевел тебе.\n\nНо вещь хорошая. Спасибо, выручил",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "journalist-partial",
+      "contactId": "journalist",
+      "text": "Мне очень жаль, но больше сейчас выплатить не могу. Перевела все, что было в моем распоряжении.\n\nМатериал действительно важный. Спасибо",
+      "attachments": [],
+      "replies": []
+    },
+    {
+      "id": "director-intro",
+      "contactId": "director",
+      "text": "Ли Чон-су, генеральный директор HAESEI. Мне сообщили, что у вас есть основания для прямого разговора с компанией.",
+      "attachments": [],
+      "replies": []
     }
-  ]
+  ],
+  "introduction": {
+    "reminderMinutes": 5,
+    "deferralMinutes": 5,
+    "journalistMinutes": 10,
+    "ivanMinutes": 11,
+    "securityMinutes": 1,
+    "requestDecisionMinutes": 4,
+    "requestExpiryMinutes": 15,
+    "requestCooldownMinutes": 10
+  }
 }

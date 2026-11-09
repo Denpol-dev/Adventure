@@ -11,11 +11,20 @@ public sealed partial class LocalSession
     private readonly Scenario _scenario;
     private readonly Dictionary<string, IncomingDefinition> _messages;
     private readonly Dictionary<string, DeviceDefinition> _devices;
+    private readonly Dictionary<string, ContactDefinition> _contacts;
+    private readonly TimeProvider _clock;
+    private readonly Random _random;
+    private readonly IPhysicalDelivery? _delivery;
 
-    public LocalSession(string databasePath, Scenario scenario)
+    public LocalSession(string databasePath, Scenario scenario, TimeProvider? clock = null, Random? random = null,
+        IPhysicalDelivery? delivery = null)
     {
         _database = new SessionDatabase(databasePath);
         _scenario = scenario;
+        _clock = clock ?? TimeProvider.System;
+        _random = random ?? Random.Shared;
+        _delivery = delivery;
+        _contacts = scenario.Contacts.ToDictionary(contact => contact.Id, StringComparer.Ordinal);
         _messages = scenario.Messages.ToDictionary(message => message.Id, StringComparer.Ordinal);
         _devices = scenario.Devices.ToDictionary(device => device.Id, StringComparer.Ordinal);
         Documents = new DocumentLibrary(_database);
@@ -31,8 +40,10 @@ public sealed partial class LocalSession
 
         foreach (var contact in _scenario.Contacts)
             Execute(connection, transaction, """
-                INSERT INTO contacts(id, nickname) VALUES($id, $nickname) ON CONFLICT(id) DO NOTHING;
-                """, ("id", contact.Id), ("nickname", contact.Nickname));
+                INSERT INTO contacts(id, nickname) VALUES($id, $nickname)
+                ON CONFLICT(id) DO UPDATE SET nickname = excluded.nickname
+                WHERE $authored AND contacts.nickname <> excluded.nickname;
+                """, ("id", contact.Id), ("nickname", contact.Nickname), ("authored", contact.Details != null));
 
         foreach (var device in _scenario.Devices)
             Execute(connection, transaction, """
@@ -41,10 +52,14 @@ public sealed partial class LocalSession
                 """, ("id", device.Id), ("name", device.Name), ("kind", device.Kind), ("available", device.InitiallyAvailable));
 
         foreach (var message in _scenario.Messages.Where(message => message.DeliverOnStart))
-            Deliver(connection, transaction, message);
+            Deliver(connection, transaction, message, UtcNow());
 
         transaction.Commit();
     }
+
+    private long UtcNow() => _clock.GetUtcNow().ToUnixTimeMilliseconds();
+
+    private static DateTimeOffset At(long timestamp) => DateTimeOffset.FromUnixTimeMilliseconds(timestamp);
 
     public PlayerProfile GetProfile()
     {
@@ -54,7 +69,7 @@ public sealed partial class LocalSession
         if (!reader.Read())
             throw new InvalidDataException("В локальной сессии отсутствует профиль.");
         if (!Guid.TryParse(reader.GetString(0), out var id) || string.IsNullOrWhiteSpace(reader.GetString(1)))
-            throw new InvalidDataException("В локальной сессии повреждён профиль.");
+            throw new InvalidDataException("В локальной сессии поврежден профиль.");
         return new PlayerProfile(id, reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetFieldValue<byte[]>(2));
     }
 

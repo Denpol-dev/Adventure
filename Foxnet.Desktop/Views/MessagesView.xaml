@@ -1,14 +1,6 @@
 <UserControl x:Class="Foxnet.Desktop.Views.MessagesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <UserControl.Resources>
-        <Style x:Key="ContactAvatar" TargetType="Border">
-            <Setter Property="Width" Value="37"/>
-            <Setter Property="Height" Value="37"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Background" Value="{DynamicResource AccentPanelBrush}"/>
-        </Style>
-    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0.52*" MinWidth="225"/>
@@ -32,10 +24,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Border Style="{StaticResource ContactAvatar}" VerticalAlignment="Top">
-                                        <TextBlock Text="?" FontSize="19" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
+                                    <ContentControl Content="{Binding Avatar}" ContentTemplate="{StaticResource NpcAvatar}" VerticalAlignment="Top"/>
                                     <StackPanel Grid.Column="1" Margin="9,0,4,0">
                                         <TextBlock Text="{Binding Nickname}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Text="{Binding LastMessage}" Foreground="{DynamicResource MutedBrush}" FontSize="12"
@@ -87,14 +76,12 @@
                     </Grid.RowDefinitions>
                     <Border BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="0,0,0,1" Padding="17,12">
                         <StackPanel Orientation="Horizontal">
-                            <Border Style="{StaticResource ContactAvatar}">
-                                <TextBlock Text="?" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <ContentControl Content="{Binding Selected.Avatar}" ContentTemplate="{StaticResource NpcAvatar}"/>
                             <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Selected.Nickname}" FontSize="17" FontWeight="SemiBold"/>
                                 <TextBlock Text="СОБЕСЕДНИК" Style="{StaticResource Eyebrow}"/>
                             </StackPanel>
+                            <Button Content="Открыть досье" Command="{Binding OpenDossierCommand}" Margin="16,0,0,0"/>
                         </StackPanel>
                     </Border>
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="15,14"
@@ -144,20 +131,24 @@
                     </ScrollViewer>
                     <Border Grid.Row="2" BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="0,1,0,0" Padding="15,9,15,13">
                         <StackPanel>
+                            <TextBlock Text="{Binding Selected.Nickname, StringFormat={}{0} печатает…}"
+                                       Style="{StaticResource MutedText}" FontStyle="Italic" Margin="0,0,0,4"
+                                       Visibility="{Binding IsTyping, Converter={StaticResource BoolVisibility}}"/>
                             <StackPanel Visibility="{Binding HasReplies, Converter={StaticResource BoolVisibility}}">
-                                <TextBlock Text="ВАРИАНТЫ ОТВЕТА" Style="{StaticResource Eyebrow}" Margin="0,1,0,6"/>
-                                <ItemsControl ItemsSource="{Binding Replies}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Button Content="{Binding Text}" CommandParameter="{Binding}"
-                                                    Command="{Binding DataContext.ReplyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    Style="{StaticResource PrimaryButton}" Margin="0,0,7,0"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <TextBlock Text="ВАРИАНТЫ ОТВЕТА" Style="{StaticResource Eyebrow}" Margin="0,1,0,8"/>
+                                <ScrollViewer MaxHeight="270" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsControl ItemsSource="{Binding Replies}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button CommandParameter="{Binding}"
+                                                        Command="{Binding DataContext.ReplyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        Style="{StaticResource PrimaryButton}" Margin="0,0,6,8" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
                             </StackPanel>
                             <TextBlock Text="{Binding Notice}" Style="{StaticResource NoticeText}"/>
                             <Border Style="{StaticResource ErrorBanner}">

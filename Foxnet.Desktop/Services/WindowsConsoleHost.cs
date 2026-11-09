@@ -42,7 +42,7 @@ internal sealed class WindowsConsoleHost : IConsoleHost
         {
             process.Kill();
             if (!process.WaitForExit(2000))
-                throw new InvalidOperationException("Консоль ещё завершает работу.");
+                throw new InvalidOperationException("Консоль еще завершает работу.");
         }
         catch (InvalidOperationException) when (process.HasExited)
         {

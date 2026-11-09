@@ -4,7 +4,8 @@ using System.Text.Json.Serialization;
 namespace Foxnet.Session;
 
 public sealed record Scenario(
-    List<ContactDefinition> Contacts, List<DeviceDefinition> Devices, List<IncomingDefinition> Messages)
+    List<ContactDefinition> Contacts, List<DeviceDefinition> Devices, List<IncomingDefinition> Messages,
+    IntroductionDefinition? Introduction = null)
 {
     public static Scenario LoadDefault()
     {
@@ -44,9 +45,22 @@ public sealed record Scenario(
             !Unique(Messages.Select(message => message?.Id)))
             throw new InvalidDataException("Сценарий содержит пустые или повторяющиеся идентификаторы.");
 
+        if (Contacts.Any(contact => contact.Details is { } npc &&
+            (npc.InitialBalance < 0 || npc.CreditsPerMinute < 0 || npc.RequestLimit < 0 || npc.MaxPaidRequests < 0 ||
+             npc.ValueKind != null && (npc.ResaleMin <= 0 || npc.ResaleMax < npc.ResaleMin || npc.ResaleMax > 10000))))
+            throw new InvalidDataException("Некорректные параметры экономики персонажа.");
+
         var contacts = Contacts.Select(contact => contact.Id).ToHashSet(StringComparer.Ordinal);
         var devices = Devices.Select(device => device.Id).ToHashSet(StringComparer.Ordinal);
         var messages = Messages.Select(message => message.Id).ToHashSet(StringComparer.Ordinal);
+        if (Introduction is { } timing && (timing.ReminderMinutes <= 0 || timing.DeferralMinutes <= 0 ||
+            timing.JournalistMinutes <= 0 || timing.IvanMinutes < timing.JournalistMinutes || timing.SecurityMinutes < 0 ||
+            timing.RequestDecisionMinutes <= 0 || timing.RequestExpiryMinutes <= timing.RequestDecisionMinutes ||
+            timing.RequestCooldownMinutes <= 0 ||
+            !new[] { "unknown-relay", "unknown-invoice", "unknown-reminder", "unknown-expired", "unknown-paid", "journalist-intro",
+                "ivan-intro", "security-intro", "director-intro" }.All(messages.Contains) ||
+            !Contacts.Any(contact => contact.Id == "unknown" && contact.Details != null)))
+            throw new InvalidDataException("Некорректные параметры вступления FOXNET.");
 
         if (Contacts.Any(contact => string.IsNullOrWhiteSpace(contact.Nickname)) ||
             Devices.Any(device => string.IsNullOrWhiteSpace(device.Name) || string.IsNullOrWhiteSpace(device.Kind) ||
@@ -77,6 +91,10 @@ public sealed record Scenario(
                     (reply.UnlockDeviceId != null && !devices.Contains(reply.UnlockDeviceId)))
                     throw new InvalidDataException($"Некорректный вариант ответа '{reply.Id}'.");
             }
+
+            if (message.Facts is { } facts && (!Unique(facts.Select(fact => fact?.Id)) ||
+                facts.Any(fact => string.IsNullOrWhiteSpace(fact.Text) || string.IsNullOrWhiteSpace(fact.Source))))
+                throw new InvalidDataException($"Некорректное сведение в сообщении '{message.Id}'.");
         }
     }
 
@@ -87,10 +105,18 @@ public sealed record Scenario(
     }
 }
 
-public sealed record ContactDefinition(string Id, string Nickname);
+public sealed record ContactDefinition(string Id, string Nickname, NpcDefinition? Details = null);
+public sealed record NpcDefinition(string? Name, int? Age, string? Organization, string Summary, string? Avatar,
+    long InitialBalance, long CreditsPerMinute, long RequestLimit, ValueKind? ValueKind, int ResaleMin, int ResaleMax,
+    int MaxPaidRequests = 1);
+public sealed record IntroductionDefinition(int ReminderMinutes, int DeferralMinutes, int JournalistMinutes,
+    int IvanMinutes, int SecurityMinutes, int RequestDecisionMinutes, int RequestExpiryMinutes, int RequestCooldownMinutes);
 public sealed record DeviceDefinition(string Id, string Name, string Kind, bool InitiallyAvailable, Credentials Credentials);
 public sealed record Credentials(string Login, string Password);
 public sealed record IncomingDefinition(string Id, string ContactId, bool DeliverOnStart, string? CredentialDeviceId, string Text,
-    List<AttachmentDefinition> Attachments, List<ReplyDefinition> Replies);
+    List<AttachmentDefinition> Attachments, List<ReplyDefinition> Replies, List<FactDefinition>? Facts = null,
+    string? History = null);
 public sealed record AttachmentDefinition(string EventId, string Title, string FileName, DocumentFormat Format, string Text);
-public sealed record ReplyDefinition(string Id, string Text, string? NextMessageId, string? UnlockDeviceId);
+public sealed record ReplyDefinition(string Id, string Text, string? NextMessageId, string? UnlockDeviceId,
+    ReplyAction? Action = null, bool Independent = false, string? Relationship = null, bool Silent = false);
+public enum ReplyAction { Dispute, Refuse, Defer, Plea }
