@@ -9,6 +9,14 @@ public sealed record ModuleState(string Id, EquipmentKind Kind, decimal Capacity
     [JsonIgnore] public decimal Percent => Capacity > 0 ? Energy / Capacity * 100 : 0;
 }
 
+public sealed record CargoItem(string Id, ItemKind Kind);
+
+public sealed record DropCrate(string Id, WorldPosition Position)
+{
+    public List<CargoItem> Items { get; init; } = [];
+    public List<ModuleState> Modules { get; init; } = [];
+}
+
 public sealed class DroneState
 {
     public required string Id { get; init; }
@@ -17,7 +25,11 @@ public sealed class DroneState
     public bool LidarScanned { get; set; }
     public Dictionary<EquipmentSlot, ModuleState> Slots { get; init; } = [];
     public List<ModuleState> Cargo { get; init; } = [];
-    public List<ItemKind> Items { get; set; } = [];
+    public List<CargoItem> Goods { get; init; } = [];
+    [JsonPropertyName("Items"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<ItemKind>? LegacyItems { get; set; }
+
+    [JsonIgnore] public IEnumerable<ItemKind> Items => Goods.Select(item => item.Kind);
 
     [JsonIgnore] public ModuleState? Battery => Slots.GetValueOrDefault(EquipmentSlot.Battery);
     [JsonIgnore] public bool Powered => Battery?.Energy > 0;
@@ -52,4 +64,5 @@ public sealed class ExpeditionState
     public Dictionary<Guid, Dictionary<int, ObservedCell>> Explored { get; init; } = [];
     public HashSet<string> Looted { get; init; } = [];
     public Dictionary<string, int> TerminalUses { get; init; } = [];
+    public List<DropCrate> DropCrates { get; init; } = [];
 }

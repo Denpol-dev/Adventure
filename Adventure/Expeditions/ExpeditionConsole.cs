@@ -10,6 +10,7 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
     private readonly ExpeditionDisplay _display = new();
     private string _message = "";
     private bool _preserveMessage;
+    private int _menuDepth;
     private long _shownRevision;
     private (int Width, int Height) _shownSize;
 
@@ -35,6 +36,12 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
                 Draw();
                 continue;
             }
+            if (key == ConsoleKey.I)
+            {
+                InMenu(Inventory);
+                Draw();
+                continue;
+            }
 
             FlightCommand? command = key switch
             {
@@ -53,15 +60,111 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
                 continue;
 
             var result = RunCommand(command);
-            if (result?.Reply.Menu == "station")
-                InMenu(Station);
-            else if (result?.Reply.Menu is string donorMenu && donorMenu.StartsWith("donor:", StringComparison.Ordinal))
-                InMenu(() => Salvage(donorMenu["donor:".Length..]));
-            if (result?.Interaction is { } interaction)
-                ShowInteraction(interaction);
+            HandleInteraction(result);
             Draw();
         }
     }
+
+    private void HandleInteraction(EngineResult? result)
+    {
+        if (result?.Reply.Menu is { } menu)
+            InMenu(() => OpenInteractionMenu(menu));
+        if (result?.Interaction is { } interaction)
+            ShowInteraction(interaction);
+    }
+
+    private void OpenInteractionMenu(string menu)
+    {
+        if (menu == "targets")
+        {
+            var targets = owner.Read(engine => engine.InteractionTargets());
+            int index = Pick("Объекты на клетке", targets.Select(target => target.Name).ToArray(), "");
+            if (index < 0)
+                return;
+            var result = RunCommand(new(FlightAction.Interact, Id: targets[index].Id));
+            if (result?.Reply.Menu is { } next)
+                OpenInteractionMenu(next);
+            else if (result?.Interaction is { } interaction)
+                ShowInteraction(interaction);
+        }
+        else if (menu == "station")
+            Station();
+        else if (menu.StartsWith("donor:", StringComparison.Ordinal))
+            Salvage(menu["donor:".Length..]);
+        else if (menu.StartsWith("crate:", StringComparison.Ordinal))
+            OpenCrate(menu["crate:".Length..]);
+    }
+
+    private void Inventory()
+    {
+        var marks = new Dictionary<string, int>();
+        while (true)
+        {
+            var (id, weight, capacity, cargo) = owner.Read(engine => (engine.ActiveDrone.Id,
+                engine.CargoWeight, engine.CargoCapacity, engine.Inventory()));
+            var groups = cargo.GroupBy(item => item.Group).Select(group => group.ToArray()).ToArray();
+            int marked = marks.Values.Sum();
+            var options = groups.Select(group => FormatGroup(group) +
+                $" · выбрано {marks.GetValueOrDefault(group[0].Group)}").ToList();
+            if (marked > 0)
+                options.Add($"Выбросить выбранное ({marked})");
+            int index = Pick($"{id} · груз {weight}/{capacity} кг · свободно {capacity - weight} кг", options, _message);
+            if (index < 0)
+                return;
+            if (index == groups.Length)
+            {
+                if (Pick($"Выбросить {marked} ед. груза на текущую клетку?", ["Отмена", "Выбросить"], "") == 1)
+                {
+                    var ids = groups.SelectMany(group => group.Take(marks.GetValueOrDefault(group[0].Group)))
+                        .Select(item => item.Id).ToArray();
+                    if (RunCommand(new(FlightAction.Drop, Items: ids))?.Reply.Applied == true)
+                        marks.Clear();
+                }
+                continue;
+            }
+            var selected = groups[index];
+            int count = Quantity(selected, includeZero: true);
+            if (count >= 0)
+                marks[selected[0].Group] = count;
+        }
+    }
+
+    private void OpenCrate(string id)
+    {
+        while (true)
+        {
+            var (free, contents) = owner.Read(engine =>
+                (engine.CargoCapacity - engine.CargoWeight, engine.CrateContents(id)));
+            if (contents.Count == 0)
+                return;
+            var groups = contents.GroupBy(item => item.Group).Select(group => group.ToArray()).ToArray();
+            var options = new[] { "Забрать всё, что помещается" }.Concat(groups.Select(FormatGroup)).ToArray();
+            int index = Pick($"Грузовой ящик · свободно {free} кг", options, _message);
+            if (index < 0)
+                return;
+            if (index == 0)
+            {
+                RunCommand(new(FlightAction.Take, Id: id));
+                continue;
+            }
+            var selected = groups[index - 1];
+            int count = selected.Length == 1 ? 1 : Quantity(selected, includeZero: false);
+            if (count > 0)
+                RunCommand(new(FlightAction.Take, Id: id, Items: selected.Take(count).Select(item => item.Id).ToArray()));
+        }
+    }
+
+    private int Quantity(CargoEntry[] group, bool includeZero)
+    {
+        int minimum = includeZero ? 0 : 1;
+        int index = Pick(group[0].Name, Enumerable.Range(minimum, group.Length - minimum + 1)
+            .Select(count => count == 0 ? "Снять отметку" : $"{count} ед. · {count * group[0].Weight} кг").ToArray(), "");
+        return index < 0 ? -1 : index + minimum;
+    }
+
+    private static string FormatGroup(CargoEntry[] group) =>
+        $"{group[0].Name} ×{group.Length} · {group[0].Weight} кг/ед. · {group.Length * group[0].Weight} кг" +
+        (group[0].Detail.Length == 0 ? "" : " · " + group[0].Detail);
 
     private EngineResult? RunCommand(FlightCommand command)
     {
@@ -162,14 +265,16 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
 
     private void InMenu(Action run)
     {
-        owner.SetMenuOpen(true);
+        if (_menuDepth++ == 0)
+            owner.SetMenuOpen(true);
         try
         {
             run();
         }
         finally
         {
-            owner.SetMenuOpen(false);
+            if (--_menuDepth == 0)
+                owner.SetMenuOpen(false);
         }
     }
 

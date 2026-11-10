@@ -16,8 +16,9 @@ public sealed partial class ExpeditionEngine
         if (drone == null && current is { Detail: true })
             drone = State.Drones.Values.FirstOrDefault(candidate => candidate.Discovered && candidate.Position == position);
 
-        return new CellView(visibility, drone != null ? 'X' : sample?.Glyph ?? ' ',
-            drone != null ? _definitions[drone.Id].Color : live ? sample!.Color : ConsoleColor.DarkGray,
+        bool crate = live && current is { Detail: true } && State.DropCrates.Exists(box => box.Position == position);
+        return new CellView(visibility, drone != null ? 'X' : crate ? '■' : sample?.Glyph ?? ' ',
+            drone != null ? _definitions[drone.Id].Color : crate ? ConsoleColor.DarkYellow : live ? sample!.Color : ConsoleColor.DarkGray,
             drone?.Id, State.Laser == position);
     }
 

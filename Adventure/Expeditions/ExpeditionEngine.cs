@@ -24,6 +24,7 @@ public sealed partial class ExpeditionEngine
         _definitions = Definition.Drones.ToDictionary(drone => drone.Id);
         _donors = Definition.Donors.ToDictionary(donor => donor.Position);
         State = state ?? CreateState(world.Id);
+        RestoreLegacyCargo();
         ValidateState(world.Id);
         if (state == null)
             SurveyStartingBay();
@@ -56,12 +57,14 @@ public sealed partial class ExpeditionEngine
             FlightAction.Move => Move(command.Direction),
             FlightAction.CycleMode => CycleMode(),
             FlightAction.SelectDrone => SelectDrone(command.Id),
-            FlightAction.Interact => Interact(),
+            FlightAction.Interact => Interact(command.Id),
             FlightAction.Charge => Charge(),
             FlightAction.Install => Install(command.Id, command.Slot),
             FlightAction.Remove => Remove(command.Slot),
             FlightAction.Salvage => Salvage(command.Id),
             FlightAction.UseTool => UseTool(command.Slot),
+            FlightAction.Drop => Drop(command.Items),
+            FlightAction.Take => Take(command.Id, command.Items),
             _ => Reject("Неизвестная команда.")
         };
         if (!result.Reply.Applied)
@@ -150,25 +153,42 @@ public sealed partial class ExpeditionEngine
         return Accept($"Выбран {id}.");
     }
 
-    private EngineResult Interact()
+    private EngineResult Interact(string? target)
     {
         if (State.Mode == ControlMode.Laser)
             return Reject("Выберите режим управления дроном.");
         var drone = ActiveDrone;
-        if (drone.Position == _map.Terminal)
-            return new(new FlightResult(false, "", "station"));
+        var cell = _map.CellAt(drone.Position);
+        var choices = InteractionTargets();
+        if (target == null && choices.Count > 1)
+            return new(new FlightResult(false, "", "targets"));
+        if (target == null && choices.Count == 1)
+            target = choices[0].Id;
+        if (target != null && !choices.Any(choice => choice.Id == target))
+            return Reject("Объект взаимодействия недоступен.");
+        if (target == "station" || target?.StartsWith("crate:", StringComparison.Ordinal) == true ||
+            target?.StartsWith("donor:", StringComparison.Ordinal) == true)
+            return new(new FlightResult(false, "", target));
         if (!drone.Powered)
             return Reject("Дрон разряжен.");
-        if (_donors.TryGetValue(drone.Position, out var donor))
-            return new(new FlightResult(false, "", "donor:" + donor.Id));
+        if (target != null)
+            cell = cell with { Objects = [cell.Objects.Single(obj => "object:" + obj.Id == target)] };
 
-        var cell = _map.CellAt(drone.Position);
         var items = StoryItems(drone);
         int capacity = _definitions[drone.Id].MaxWeight - drone.Cargo.Sum(module => Equipment.Weight(module.Kind));
         var interaction = WorldInteraction.Apply(cell, items, capacity, State.Looted);
         bool changed = interaction.Result is InteractionResult.InventoryChanged or InteractionResult.Completed;
         if (changed)
-            drone.Items = items.Select(WorldContent.GetItemKind).ToList();
+        {
+            for (int index = 0; index < items.Count; index++)
+            {
+                var kind = WorldContent.GetItemKind(items[index]);
+                if (index == drone.Goods.Count)
+                    drone.Goods.Add(new CargoItem("loot:" + cell.Objects[0].Id, kind));
+                else if (drone.Goods[index].Kind != kind)
+                    drone.Goods[index] = drone.Goods[index] with { Kind = kind };
+            }
+        }
         if (interaction.Actor is Terminal && (changed || interaction.Result == InteractionResult.Action))
         {
             string id = cell.Objects[0].Id;
@@ -224,21 +244,36 @@ public sealed partial class ExpeditionEngine
             !State.Donors.Keys.ToHashSet().SetEquals(Definition.Donors.Select(donor => donor.Id)))
             throw new InvalidDataException("Сохранение не соответствует определению экспедиции.");
 
-        var moduleIds = new HashSet<string>(StringComparer.Ordinal);
+        var cargoIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (id, drone) in State.Drones)
         {
             if (id != drone.Id || !_map.IsValid(drone.Position) || !drone.Slots.ContainsKey(EquipmentSlot.Locomotion) ||
                 drone.Slots.Any(pair => !Equipment.Fits(pair.Value.Kind, pair.Key)) ||
-                drone.Items.Any(item => !Enum.IsDefined(item)) ||
+                drone.Goods.Any(item => !Enum.IsDefined(item.Kind)) ||
                 Weight(drone) > _definitions[id].MaxWeight)
                 throw new InvalidDataException($"Сохранение содержит некорректное состояние дрона {id}.");
 
             foreach (var module in drone.Slots.Values.Concat(drone.Cargo))
                 ValidateModule(module);
+            foreach (var item in drone.Goods)
+                ValidateId(item.Id);
         }
 
         foreach (var module in State.Donors.Values.SelectMany(modules => modules))
             ValidateModule(module);
+
+        var cratePositions = new HashSet<WorldPosition>();
+        foreach (var crate in State.DropCrates)
+        {
+            ValidateId(crate.Id);
+            if (!_map.IsValid(crate.Position) || !cratePositions.Add(crate.Position) ||
+                crate.Items.Count + crate.Modules.Count == 0 || crate.Items.Any(item => !Enum.IsDefined(item.Kind)))
+                throw new InvalidDataException("Сохранение содержит некорректный грузовой ящик.");
+            foreach (var item in crate.Items)
+                ValidateId(item.Id);
+            foreach (var module in crate.Modules)
+                ValidateModule(module);
+        }
 
         foreach (var (levelId, cells) in State.Explored)
         {
@@ -250,10 +285,17 @@ public sealed partial class ExpeditionEngine
 
         void ValidateModule(ModuleState module)
         {
-            if (string.IsNullOrWhiteSpace(module.Id) || !moduleIds.Add(module.Id) || !Enum.IsDefined(module.Kind) ||
+            ValidateId(module.Id);
+            if (!Enum.IsDefined(module.Kind) ||
                 module.Capacity < 0 || module.Energy < 0 || module.Energy > module.Capacity ||
                 Equipment.Fits(module.Kind, EquipmentSlot.Battery) != (module.Capacity > 0))
                 throw new InvalidDataException("Сохранение содержит некорректный экземпляр оборудования.");
+        }
+
+        void ValidateId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) || !cargoIds.Add(id))
+                throw new InvalidDataException("Сохранение содержит пустой или повторяющийся идентификатор груза.");
         }
     }
 
@@ -319,7 +361,7 @@ public sealed partial class ExpeditionEngine
     private static List<Item> StoryItems(DroneState drone) => drone.Items.Select(kind => WorldContent.CreateItem(kind)!).ToList();
 
     private static int Weight(DroneState drone) =>
-        drone.Cargo.Sum(module => Equipment.Weight(module.Kind)) + StoryItems(drone).Sum(item => item.Weight);
+        drone.Cargo.Sum(module => Equipment.Weight(module.Kind)) + drone.Goods.Sum(ItemWeight);
 
     private static EngineResult Accept(string message = "") => new(new FlightResult(true, message));
     private static EngineResult Reject(string message) => new(new FlightResult(false, message));

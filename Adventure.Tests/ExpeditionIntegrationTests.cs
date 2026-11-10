@@ -75,6 +75,75 @@ public sealed class ExpeditionIntegrationTests
     }
 
     [Test]
+    public void DroppedCargoStaysAtItsCellAndKeepsItsIdentityAcrossDronesAndRestarts()
+    {
+        var world = ExpeditionTests.Load();
+        var engine = ExpeditionTests.At(world, "N24S56", 47, 26);
+        var donor = engine.Definition.Donors.Single(candidate => candidate.Id == "DN-01");
+        var position = engine.ActiveDrone.Position;
+        var other = engine.State.Drones["DR-02"];
+        other.Discovered = true;
+        other.Position = position with { X = 48 };
+        Seed(world, engine.State);
+
+        string crateId;
+        ModuleState battery;
+        using (var owner = new ExpeditionOwner(world, Database))
+        {
+            foreach (var component in donor.Components)
+                Assert.That(owner.Execute(new(FlightAction.Salvage, Id: component.Id)).Result.Reply.Applied, Is.True);
+            battery = owner.Read(runtime => runtime.ActiveDrone.Cargo.Single(module => module.Capacity > 0));
+            var ids = donor.Components.Select(component => component.Id).ToArray();
+            Assert.That(owner.Execute(new(FlightAction.Drop, Items: [ids[0], owner.Read(runtime =>
+                runtime.ActiveDrone.Battery!.Id)])).Result.Reply.Applied, Is.False);
+            Assert.That(owner.Execute(new(FlightAction.Drop, Items: ids)).Result.Reply.Applied, Is.True);
+            crateId = owner.Read(runtime => runtime.CrateHere!.Id);
+            Assert.That(owner.Execute(new(FlightAction.Interact)).Result.Reply.Menu, Is.EqualTo("targets"));
+            Assert.That(owner.Execute(new(FlightAction.Take, Id: crateId, Items: [ids[0]])).Result.Reply.Applied, Is.True);
+            Assert.That(owner.Execute(new(FlightAction.Drop, Items: [ids[0]])).Result.Reply.Applied, Is.True);
+            Assert.That(owner.Read(runtime => runtime.State.DropCrates.Single().Id), Is.EqualTo(crateId));
+
+            Assert.That(owner.Execute(ExpeditionTests.Move(FlightDirection.Left)).Result.Reply.Applied, Is.True);
+            Assert.That(owner.Read(runtime => runtime.ViewCell(position).Glyph), Is.EqualTo('■'));
+            Assert.That(owner.Execute(new(FlightAction.SelectDrone, Id: other.Id)).Result.Reply.Applied, Is.True);
+            Assert.That(owner.Execute(new(FlightAction.Take, Id: crateId)).Result.Reply.Applied, Is.False);
+            Assert.That(owner.Execute(ExpeditionTests.Move(FlightDirection.Left)).Result.Reply.Applied, Is.True);
+            Assert.That(owner.Execute(new(FlightAction.Take, Id: crateId, Items: [ids[0]])).Result.Reply.Applied, Is.True);
+        }
+
+        using var restored = new ExpeditionOwner(world, Database);
+        Assert.Multiple(() =>
+        {
+            Assert.That(restored.Read(runtime => runtime.CrateHere!.Id), Is.EqualTo(crateId));
+            Assert.That(restored.Read(runtime => runtime.CrateHere!.Modules.Single()), Is.EqualTo(battery));
+        });
+        Assert.That(restored.Execute(new(FlightAction.Take, Id: crateId)).Result.Reply.Applied, Is.True);
+        Assert.That(restored.Read(runtime => runtime.State.DropCrates), Is.Empty);
+        Assert.That(restored.Read(runtime => runtime.ActiveDrone.Cargo), Does.Contain(battery));
+        Assert.That(restored.Execute(new(FlightAction.Take, Id: crateId)).Result.Reply.Applied, Is.False);
+    }
+
+    [Test]
+    public void TakeAllFillsRemainingCapacityWithoutMovingAnOverweightBattery()
+    {
+        var engine = ExpeditionTests.At("N24S56", 47, 26);
+        var drone = engine.ActiveDrone;
+        var donor = engine.Definition.Donors.Single(candidate => candidate.Id == "DN-01");
+        foreach (var component in donor.Components)
+            ExpeditionTests.Apply(engine, FlightAction.Salvage, id: component.Id);
+        var ids = drone.Cargo.Select(module => module.Id).ToArray();
+        Assert.That(engine.Apply(new(FlightAction.Drop, Items: ids)).Reply.Applied, Is.True);
+        for (int index = 0; index < engine.CargoCapacity - 1; index++)
+            drone.Goods.Add(new CargoItem($"key-{index}", ItemKind.Key));
+        var crate = engine.CrateHere!;
+        Assert.That(engine.Apply(new(FlightAction.Take, Id: crate.Id, Items: ids)).Reply.Applied, Is.False);
+        Assert.That(crate.Modules, Has.Count.EqualTo(2));
+        Assert.That(engine.Apply(new(FlightAction.Take, Id: crate.Id)).Reply.Applied, Is.True);
+        Assert.That(engine.CargoWeight, Is.EqualTo(engine.CargoCapacity));
+        Assert.That(crate.Modules.Single().Id, Is.EqualTo(donor.Components[1].Id));
+    }
+
+    [Test]
     public void RestartRestoresFleetModeEquipmentDonorsAndSurveyWithoutCreatingANewRun()
     {
         var world = ExpeditionTests.Load();
@@ -184,7 +253,7 @@ public sealed class ExpeditionIntegrationTests
         var selected = oldState.Drones["DR-07"];
         selected.Discovered = true;
         selected.Position = new WorldPosition(newLevel, 38, 16);
-        selected.Items.Add(ItemKind.HardDriveXD23Full);
+        selected.LegacyItems = [ItemKind.HardDriveXD23Full];
         ExpeditionTests.SetEnergy(selected, 17.4m);
         oldState.SelectedDroneId = selected.Id;
         oldState.Laser = selected.Position;
@@ -216,7 +285,7 @@ public sealed class ExpeditionIntegrationTests
                 Assert.That(owner.Read(runtime => runtime.OnStation), Is.False);
                 Assert.That(migrated.SelectedDroneId, Is.EqualTo(selected.Id));
                 Assert.That(migrated.Drones[selected.Id].Battery!.Energy, Is.EqualTo(17.4m));
-                Assert.That(migrated.Drones[selected.Id].Items, Is.EqualTo(selected.Items));
+                Assert.That(migrated.Drones[selected.Id].Items, Is.EqualTo(selected.LegacyItems));
                 Assert.That(migrated.Explored.Keys, Is.EqualTo(new[] { oldLevel }));
                 Assert.That(migrated.Explored[oldLevel][229], Is.EqualTo(oldState.Explored[oldLevel][229]));
                 Assert.That(migrated.TerminalUses["existing-terminal"], Is.EqualTo(3));

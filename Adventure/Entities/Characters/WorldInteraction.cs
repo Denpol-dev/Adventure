@@ -31,7 +31,9 @@ internal static class WorldInteraction
                 return new(hasOutput ? InteractionResult.TerminalOff : InteractionResult.MissingItem);
             }
 
-            inventory[index] = terminal.Inventory!;
+            if (inventory.Sum(item => item.Weight) - inventory[index].Weight + terminal.Inventory!.Weight > maxWeight)
+                return new(InteractionResult.Overweight);
+            inventory[index] = terminal.Inventory;
             return new(terminal.CompletesGame ? InteractionResult.Completed : InteractionResult.InventoryChanged, terminal);
         }
 

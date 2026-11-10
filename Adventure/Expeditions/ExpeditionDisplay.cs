@@ -34,7 +34,7 @@ internal sealed class ExpeditionDisplay
         var cargo = drone.Items.Select(kind => WorldContent.CreateItem(kind)!.Name)
             .Concat(drone.Cargo.Select(module => Equipment.Name(module.Kind)));
         Put(rows, 3, "Инвентарь: " + string.Join(", ", cargo), ConsoleColor.Gray);
-        Put(rows, 4, "WASD · Tab режим · F парк · E действие · C заряд · Q/R инструменты · Esc выход", ConsoleColor.DarkGray);
+        Put(rows, 4, "WASD · Tab режим · F парк · E действие · I груз · C заряд · Q/R инструменты · Esc выход", ConsoleColor.DarkGray);
 
         var focus = engine.ViewPosition;
         var map = level.Map;

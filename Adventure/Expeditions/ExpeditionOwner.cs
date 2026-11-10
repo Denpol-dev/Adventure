@@ -26,10 +26,11 @@ public sealed class ExpeditionOwner : IDisposable
                 WasRestored = true;
                 var state = ReadState(existing.Payload);
                 int previousLayout = state.LayoutRevision;
+                bool legacyCargo = state.Drones.Values.Any(drone => drone.LegacyItems != null);
                 _engine = new ExpeditionEngine(_world, state);
                 _saved = existing.Payload;
                 _revision = existing.Revision;
-                if (state.LayoutRevision != previousLayout)
+                if (state.LayoutRevision != previousLayout || legacyCargo)
                     SaveCurrentState();
             }
             else
