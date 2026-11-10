@@ -143,6 +143,18 @@ public sealed partial class LocalSession
                 case "contract-payment":
                     SettleContractPayment(connection, transaction, next.Subject, next.Due);
                     break;
+                case "resale":
+                    ResellValue(connection, transaction, next.Subject, next.Due);
+                    break;
+                case "review-evidence":
+                    ReviewEvidence(connection, transaction, next.Subject, next.Due);
+                    break;
+                case "publish-evidence":
+                    PublishEvidence(connection, transaction, next.Subject, next.Due);
+                    break;
+                case "analyze-publication":
+                    AnalyzePublication(connection, transaction, next.Subject, next.Due);
+                    break;
                 default:
                     throw new InvalidDataException($"Неизвестный тип события: {next.Kind}");
             }
@@ -173,7 +185,7 @@ public sealed partial class LocalSession
 
     private static long After(long timestamp, int minutes) => checked(timestamp + minutes * 60_000L);
 
-    private static string? Flag(SqliteConnection connection, SqliteTransaction transaction, string key) =>
+    private static string? Flag(SqliteConnection connection, SqliteTransaction? transaction, string key) =>
         Scalar(connection, transaction, "SELECT value FROM story_flags WHERE key = $key;", ("key", key)) as string;
 
     private static void SetFlag(SqliteConnection connection, SqliteTransaction transaction, string key, string value) =>

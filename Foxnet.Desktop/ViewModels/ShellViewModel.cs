@@ -138,7 +138,7 @@ public sealed partial class ShellViewModel(string databasePath, string dataDirec
             case Page.Messages: UpdateWorldView(() => Messages?.Refresh(markRead: true)); break;
             case Page.Contacts: UpdateWorldView(() => Contacts?.Refresh()); break;
             case Page.Bank: UpdateWorldView(() => Bank?.Refresh()); break;
-            case Page.Documents: UpdateWorldView(() => Documents?.RefreshOffer()); break;
+            case Page.Documents: UpdateWorldView(() => Documents?.Refresh()); break;
         }
         PollWorld();
     }
@@ -197,7 +197,7 @@ public sealed partial class ShellViewModel(string databasePath, string dataDirec
         if (newEvent && Page == Page.Bank)
             Bank?.Refresh();
         if (newEvent && Page == Page.Documents)
-            Documents?.RefreshOffer();
+            Documents?.Refresh();
 
         _wasActive = active;
         state = session.GetNotifications(readBank: active && Page == Page.Bank && state.BankEvents != 0);

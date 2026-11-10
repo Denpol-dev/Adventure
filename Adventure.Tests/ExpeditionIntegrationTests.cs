@@ -39,6 +39,10 @@ public sealed class ExpeditionIntegrationTests
                 DROP TABLE corporate_pressure;
                 DROP TABLE world_settings;
                 DROP TABLE notifications;
+                DROP TABLE npc_observations;
+                DROP TABLE evidence_publications;
+                DROP TABLE orbital_cargo;
+                DROP TABLE expedition_evidence;
                 DROP TABLE value_sales;
                 DROP TABLE registered_values;
                 DROP TABLE payment_requests;
@@ -72,6 +76,142 @@ public sealed class ExpeditionIntegrationTests
             Assert.That(desktop.Documents.List(), Has.Count.EqualTo(1));
             Assert.That(desktop.GetDevices().Single().Authorized, Is.True);
         });
+    }
+
+    [Test]
+    public void ExpeditionLinksRepairsEvidenceAndOrbitalTradeAcrossRestarts()
+    {
+        var world = ExpeditionTests.Load();
+        var clock = new ExpeditionClock();
+        var desktop = new LocalSession(Database, Scenario.LoadDefault(), clock);
+        desktop.Initialize();
+        desktop.CreateAccount("Pilot-17", "test-password");
+        desktop.EnterWorkspace();
+        clock.Move(12);
+        desktop.AdvanceWorld();
+
+        string evidenceId;
+        string cargoId;
+        using (var owner = new ExpeditionOwner(world, Database))
+        {
+            Go("N24S56", 47, 26);
+            Command(FlightAction.Salvage, "DN-01-01");
+            Command(FlightAction.Salvage, "DN-01-02");
+            Go("N24S56", 41, 21);
+            Command(FlightAction.Install, "DN-01-01", nameof(EquipmentSlot.Lidar));
+            Command(FlightAction.Charge);
+            Go("N24S56", 55, 20);
+            Command(FlightAction.ReadTerminalFile, "dispatch-cache", "survey-credentials");
+            Go("N23S56", 30, 12);
+            Command(FlightAction.ReadTerminalFile, "weather-recorder", "air-telemetry");
+            var initial = owner.Revision;
+            Sql("CREATE TRIGGER fail_export BEFORE INSERT ON documents BEGIN SELECT RAISE(ABORT, 'simulated'); END;");
+            Assert.Throws<SqliteException>(() => Command(FlightAction.ExtractEvidence, "weather-recorder", "air-telemetry"));
+            Assert.That(owner.Revision, Is.EqualTo(initial));
+            Assert.That(owner.Read(engine => engine.State.ExtractedFiles), Is.Empty);
+            Sql("DROP TRIGGER fail_export;");
+            Command(FlightAction.ExtractEvidence, "weather-recorder", "air-telemetry");
+            Assert.That(Attempt(FlightAction.ExtractEvidence, "weather-recorder", "air-telemetry").Applied, Is.False);
+            evidenceId = desktop.Documents.List().Single().EventId;
+            Assert.That(desktop.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.None));
+            var evidence = desktop.GetDocumentOffer(evidenceId)!;
+            Assert.That(desktop.TransferValue(Guid.NewGuid(), evidence.Id, evidence.BuyerId).Paid, Is.EqualTo(900));
+            Assert.That(desktop.TransferValue(Guid.NewGuid(), evidence.Id, evidence.BuyerId).Error, Is.EqualTo(TradeError.AlreadyTransferred));
+            Assert.That(desktop.GetPublication(evidenceId)!.Status, Is.EqualTo(PublicationStatus.Reviewing));
+            Assert.That(desktop.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.None));
+
+            Go("N23S56", 37, 16);
+            Assert.That(Attempt(FlightAction.ReadTerminalFile, "supply-register", "parts-register").Applied, Is.False);
+            Assert.That(Attempt(FlightAction.ResetTerminalPassword, "supply-register", login: "supply.ops", password: "new").Applied, Is.False);
+            SignIn("supply-register", "supply.ops", "pallet-04");
+            Command(FlightAction.ReadTerminalFile, "supply-register", "parts-register");
+            Command(FlightAction.ReadTerminalFile, "supply-register", "admin-seal");
+            SignIn("supply-register", "supply.root", "seal-71");
+            Assert.That(Attempt(FlightAction.ResetTerminalPassword, "supply-register", login: "supply", password: "new").Applied, Is.False);
+            Command(FlightAction.ResetTerminalPassword, "supply-register", login: "supply.ops", password: "new");
+            Assert.That(Attempt(FlightAction.SignInTerminal, "supply-register", login: "supply.ops", password: "pallet-04").Applied, Is.False);
+            SignIn("supply-register", "supply.ops", "new");
+
+            Go("N25S57", 26, 11);
+            SignIn("reserve-array", "relay.eng", "reserve-17");
+            Assert.That(Attempt(FlightAction.OperateTerminal, "reserve-array", "relay-live").Applied, Is.False);
+            Command(FlightAction.ReadTerminalFile, "reserve-array", "relay-fault");
+            Command(FlightAction.OperateTerminal, "reserve-array", "relay-diagnose");
+            Command(FlightAction.OperateTerminal, "reserve-array", "relay-jumper");
+            Command(FlightAction.OperateTerminal, "reserve-array", "relay-live");
+            Assert.That(Attempt(FlightAction.OperateTerminal, "reserve-array", "relay-live").Applied, Is.False);
+
+            Go("N24S58", 45, 15);
+            Command(FlightAction.Interact);
+            Go("N25S58", 18, 16);
+            SignIn("orbital-control", "orbit.ops", "gantry-08");
+            Assert.That(Attempt(FlightAction.ReadTerminalFile, "orbital-control", "evacuation").Applied, Is.False);
+            Command(FlightAction.OperateTerminal, "orbital-control", "orbit-link");
+            Command(FlightAction.ReadTerminalFile, "orbital-control", "control-credentials");
+            Go("N25S58", 34, 16);
+            SignIn("space-elevator", "lift.tech", "carriage-03");
+            Assert.That(Attempt(FlightAction.DispatchCargo, "space-elevator", "DN-01-02").Applied, Is.False);
+            Assert.That(desktop.GetOrbitalOffers(), Is.Empty);
+            Command(FlightAction.ReadTerminalFile, "space-elevator", "lift-fault");
+            Command(FlightAction.OperateTerminal, "space-elevator", "lift-diagnose");
+            Command(FlightAction.OperateTerminal, "space-elevator", "lift-unlock");
+            Command(FlightAction.OperateTerminal, "space-elevator", "lift-live");
+            Command(FlightAction.DispatchCargo, "space-elevator", "DN-01-02");
+            Assert.That(owner.Read(engine => engine.ActiveDrone.Cargo.Any(item => item.Id == "DN-01-02")), Is.False);
+            var cargo = desktop.GetOrbitalOffers().Single();
+            cargoId = cargo.Offer.Id;
+            Assert.That(cargo.Condition, Does.Contain("190/1000 GAh"));
+
+            void Go(string level, int x, int y) => owner.Read(engine =>
+            {
+                ExpeditionTests.Navigate(engine, level, x, y, direction =>
+                {
+                    var result = owner.Execute(ExpeditionTests.Move(direction)).Result.Reply;
+                    Assert.That(result.Applied, Is.True, result.Message);
+                });
+                return 0;
+            });
+            FlightResult Attempt(FlightAction action, string? id = null, string? slot = null, string? login = null, string? password = null) =>
+                owner.Execute(new(action, Id: id, Slot: slot, Login: login, Password: password)).Result.Reply;
+            void Command(FlightAction action, string? id = null, string? slot = null, string? login = null, string? password = null)
+            {
+                var result = Attempt(action, id, slot, login, password);
+                Assert.That(result.Applied, Is.True, result.Message);
+            }
+            void SignIn(string id, string login, string password) => Command(FlightAction.SignInTerminal, id, login: login, password: password);
+        }
+
+        clock.Move(5);
+        var reopened = new LocalSession(Database, Scenario.LoadDefault(), clock);
+        reopened.Initialize();
+        reopened.EnterWorkspace();
+        reopened.AdvanceWorld();
+        Assert.That(reopened.GetPublication(evidenceId)!.Status, Is.EqualTo(PublicationStatus.Published));
+        Assert.That(reopened.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.JournalistIsOperator));
+        Assert.That(reopened.OpenConversation("security").SelectMany(message => message.Attachments), Is.Empty);
+        Assert.That(reopened.OpenConversation("journalist").Sum(message => message.Attachments.Count), Is.EqualTo(2));
+        Assert.That(reopened.TransferValue(Guid.NewGuid(), cargoId, "ivan").Paid, Is.Positive);
+        Assert.That(reopened.GetOrbitalOffers(), Is.Empty);
+        Assert.That(reopened.TransferValue(Guid.NewGuid(), cargoId, "ivan").Error, Is.EqualTo(TradeError.AlreadyTransferred));
+        using var restored = new ExpeditionOwner(world, Database);
+        Assert.That(restored.Read(engine => engine.State.Operations), Does.Contain("lift-live"));
+        Assert.That(restored.Read(engine => engine.State.Terminals["supply-register"].Login), Is.EqualTo("supply.ops"));
+
+        void Sql(string statement)
+        {
+            using var connection = new SqliteConnection($"Data Source={Database};Pooling=False");
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = statement;
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private sealed class ExpeditionClock : TimeProvider
+    {
+        private DateTimeOffset _now = DateTimeOffset.UtcNow;
+        public override DateTimeOffset GetUtcNow() => _now;
+        public void Move(int minutes) => _now = _now.AddMinutes(minutes);
     }
 
     [Test]

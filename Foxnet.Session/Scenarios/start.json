@@ -461,7 +461,7 @@
   "introduction": {
     "reminderMinutes": 5,
     "deferralMinutes": 5,
-    "journalistMinutes": 10,
+    "journalistMinutes": 5,
     "ivanMinutes": 11,
     "securityMinutes": 1,
     "requestDecisionMinutes": 4,

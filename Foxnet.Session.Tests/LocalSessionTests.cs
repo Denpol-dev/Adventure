@@ -367,6 +367,10 @@ public sealed class LocalSessionTests
             DROP TABLE corporate_pressure;
             DROP TABLE world_settings;
             DROP TABLE notifications;
+            DROP TABLE npc_observations;
+            DROP TABLE evidence_publications;
+            DROP TABLE orbital_cargo;
+            DROP TABLE expedition_evidence;
             DROP TABLE value_sales;
             DROP TABLE registered_values;
             DROP TABLE payment_requests;

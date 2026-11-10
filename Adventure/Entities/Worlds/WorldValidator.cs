@@ -15,7 +15,7 @@ namespace Adventure.Entities.Worlds
             Require(world.Metadata != null && world.Buildings != null, "Некорректные метаданные или список зданий мира.");
 
             var levels = new Dictionary<Guid, LevelDefinition>();
-            var coordinates = new HashSet<(int, int)>();
+            var coordinates = new HashSet<(bool, int, int)>();
             var objectIds = new HashSet<string>(StringComparer.Ordinal);
             var buildings = ValidateBuildings(world.Buildings);
 
@@ -24,7 +24,7 @@ namespace Adventure.Entities.Worlds
                 Require(level != null && level.Id != Guid.Empty && !string.IsNullOrWhiteSpace(level.Name),
                     "У квадранта отсутствует идентификатор или имя.");
                 Require(levels.TryAdd(level.Id, level), $"Повторяющийся идентификатор квадранта: {level.Id}.");
-                Require(coordinates.Add((level.GlobalX, level.GlobalY)),
+                Require(coordinates.Add((level.Underground, level.GlobalX, level.GlobalY)),
                     $"Квадрант {level.Name}: глобальные координаты ({level.GlobalX}, {level.GlobalY}) уже заняты.");
                 ValidateLevel(level, objectIds, buildings, world.Expedition?.Station);
             }
@@ -37,7 +37,8 @@ namespace Adventure.Entities.Worlds
                     Require(levels.TryGetValue(neighborId, out var neighbor),
                         $"Квадрант {level.Name}: сосед {direction} с идентификатором {neighborId} не найден.");
                     var (dx, dy) = direction.Offset();
-                    Require(neighbor.GlobalX == (long)level.GlobalX + dx && neighbor.GlobalY == (long)level.GlobalY + dy,
+                    Require(neighbor.Underground == level.Underground &&
+                        neighbor.GlobalX == (long)level.GlobalX + dx && neighbor.GlobalY == (long)level.GlobalY + dy,
                         $"Квадрант {level.Name}: координаты соседа {neighbor.Name} не соответствуют направлению {direction}.");
                     Require(neighbor.Neighbors.GetValueOrDefault(direction.Opposite()) == level.Id,
                         $"Квадранты {level.Name} и {neighbor.Name}: отсутствует обратная связь.");
@@ -47,7 +48,7 @@ namespace Adventure.Entities.Worlds
             var start = world.Start;
             Require(levels.TryGetValue(start.LevelId, out var first),
                 $"Стартовый квадрант {start.LevelId} не найден.");
-            Require(first.Contains(start.X, start.Y),
+            Require(!first.Underground && first.Contains(start.X, start.Y),
                 $"Квадрант {first.Name}: стартовая позиция ({start.X}, {start.Y}) вне карты.");
             var cell = WorldContent.CreateCell(first.Rows[start.Y][start.X],
                 first.Cells.FirstOrDefault(cell => cell.X == start.X && cell.Y == start.Y),
@@ -56,6 +57,7 @@ namespace Adventure.Entities.Worlds
             if (world.Expedition is { } expedition)
             {
                 ExpeditionValidator.Validate(expedition, levels, buildings);
+                TerminalValidator.Validate(levels);
                 var position = expedition.Drones.Single(drone => drone.Id == expedition.StartDroneId).Position;
                 Require((position.LevelId, position.X, position.Y) == (start.LevelId, start.X, start.Y),
                     "Стартовая позиция мира не совпадает с позицией начального дрона.");
@@ -151,7 +153,8 @@ namespace Adventure.Entities.Worlds
                 ObjectKind.Sign => !string.IsNullOrWhiteSpace(obj.Message) && obj.Item == null && obj.RequiredItem == null,
                 _ => false
             };
-            Require(valid && (obj.Kind == ObjectKind.Terminal || (!obj.CompletesGame && !obj.IsAlien)),
+            Require(valid && (obj.Kind == ObjectKind.Terminal || (!obj.CompletesGame && !obj.IsAlien && obj.System == null)) &&
+                (obj.System == null || obj.RequiredItem == null),
                 $"{location}: некорректные параметры объекта типа {obj.Kind}.");
         }
 

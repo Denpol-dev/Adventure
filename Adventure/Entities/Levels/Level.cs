@@ -13,6 +13,7 @@ namespace Adventure.Entities.Levels
             Name = definition.Name;
             GlobalX = definition.GlobalX;
             GlobalY = definition.GlobalY;
+            Underground = definition.Underground;
             Color = definition.Color;
             Map = new Map(definition);
         }
@@ -21,6 +22,7 @@ namespace Adventure.Entities.Levels
         public string Name { get; }
         public int GlobalX { get; }
         public int GlobalY { get; }
+        public bool Underground { get; }
         public ConsoleColor Color { get; }
         public Map Map { get; }
 

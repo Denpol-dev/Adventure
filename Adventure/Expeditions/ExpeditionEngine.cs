@@ -8,13 +8,14 @@ using Foxnet.Session;
 
 namespace Adventure.Expeditions;
 
-public sealed record EngineResult(FlightResult Reply, Interaction? Interaction = null);
+public sealed record EngineResult(FlightResult Reply, Interaction? Interaction = null, ExpeditionExport? Export = null);
 
 public sealed partial class ExpeditionEngine
 {
     private readonly ExpeditionMap _map;
     private readonly Dictionary<string, DroneDefinition> _definitions;
     private readonly Dictionary<WorldPosition, DonorDefinition> _donors;
+    private readonly Dictionary<string, ObjectDefinition> _terminals;
     private readonly Dictionary<WorldPosition, ObservedCell> _visible = [];
 
     public ExpeditionEngine(WorldDefinition world, ExpeditionState? state = null)
@@ -23,6 +24,8 @@ public sealed partial class ExpeditionEngine
         _map = new ExpeditionMap(new InitLevels(world), Definition);
         _definitions = Definition.Drones.ToDictionary(drone => drone.Id);
         _donors = Definition.Donors.ToDictionary(donor => donor.Position);
+        _terminals = world.Levels.SelectMany(level => level.Objects).Where(obj => obj.System != null)
+            .ToDictionary(obj => obj.Id, StringComparer.Ordinal);
         State = state ?? CreateState(world.Id);
         RestoreLegacyCargo();
         ValidateState(world.Id);
@@ -65,6 +68,13 @@ public sealed partial class ExpeditionEngine
             FlightAction.UseTool => UseTool(command.Slot),
             FlightAction.Drop => Drop(command.Items),
             FlightAction.Take => Take(command.Id, command.Items),
+            FlightAction.SignInTerminal => SignInTerminal(command.Id, command.Login, command.Password),
+            FlightAction.SignOutTerminal => SignOutTerminal(command.Id),
+            FlightAction.ResetTerminalPassword => ResetTerminalPassword(command.Id, command.Login, command.Password),
+            FlightAction.ReadTerminalFile => ReadTerminalFile(command.Id, command.Slot, extract: false),
+            FlightAction.ExtractEvidence => ReadTerminalFile(command.Id, command.Slot, extract: true),
+            FlightAction.OperateTerminal => OperateTerminal(command.Id, command.Slot),
+            FlightAction.DispatchCargo => DispatchCargo(command.Id, command.Slot),
             _ => Reject("Неизвестная команда.")
         };
         if (!result.Reply.Applied)
@@ -73,7 +83,8 @@ public sealed partial class ExpeditionEngine
         if (command.Action is FlightAction.Move or FlightAction.CycleMode or FlightAction.SelectDrone)
             State.AwaitingFirstSurvey = false;
         State.GameOver = State.Drones.Values.All(drone => !drone.Powered &&
-            !(drone.Battery == null && _map.OnStation(drone.Position) && drone.Cargo.Any(module => module.Energy > 0)));
+            !(_map.OnStation(drone.Position) && (drone.Battery != null ||
+                drone.Cargo.Any(module => Equipment.Fits(module.Kind, EquipmentSlot.Battery)))));
         RefreshVisibility(remember: true);
         return result;
     }
@@ -120,8 +131,7 @@ public sealed partial class ExpeditionEngine
 
         drone.Position = next;
         ScanWithLidar(drone);
-        if (State.Mode == ControlMode.Combined)
-            State.Laser = next;
+        FollowDrone();
         foreach (var encountered in State.Drones.Values.Where(candidate => candidate.Position == next))
             encountered.Discovered = true;
         return Accept();
@@ -135,8 +145,7 @@ public sealed partial class ExpeditionEngine
             ControlMode.Laser => ControlMode.Combined,
             _ => ControlMode.Drone
         };
-        if (State.Mode == ControlMode.Combined)
-            State.Laser = ActiveDrone.Position;
+        FollowDrone();
         return Accept();
     }
 
@@ -148,9 +157,14 @@ public sealed partial class ExpeditionEngine
             return Reject("Этот дрон уже выбран.");
 
         State.SelectedDroneId = id;
-        if (State.Mode == ControlMode.Combined)
-            State.Laser = drone.Position;
+        FollowDrone();
         return Accept($"Выбран {id}.");
+    }
+
+    private void FollowDrone()
+    {
+        if (State.Mode == ControlMode.Combined && !Levels[ActiveDrone.Position.LevelId].Underground)
+            State.Laser = ActiveDrone.Position;
     }
 
     private EngineResult Interact(string? target)
@@ -173,6 +187,11 @@ public sealed partial class ExpeditionEngine
             return Reject("Дрон разряжен.");
         if (target != null)
             cell = cell with { Objects = [cell.Objects.Single(obj => "object:" + obj.Id == target)] };
+        if (cell.Objects.FirstOrDefault() is { } placed && _terminals.ContainsKey(placed.Id))
+        {
+            State.TerminalUses[placed.Id] = State.TerminalUses.GetValueOrDefault(placed.Id) + 1;
+            return new(new FlightResult(true, "", "terminal:" + placed.Id));
+        }
 
         var items = StoryItems(drone);
         int capacity = _definitions[drone.Id].MaxWeight - drone.Cargo.Sum(module => Equipment.Weight(module.Kind));
@@ -238,11 +257,12 @@ public sealed partial class ExpeditionEngine
     private void ValidateState(Guid worldId)
     {
         if (State.WorldId != worldId || State.LayoutRevision < 0 || State.LayoutRevision > Definition.LayoutRevision ||
-            !Enum.IsDefined(State.Mode) || !_map.IsValid(State.Laser) ||
+            !Enum.IsDefined(State.Mode) || !_map.IsValid(State.Laser) || Levels[State.Laser.LevelId].Underground ||
             !State.Drones.Keys.ToHashSet().SetEquals(_definitions.Keys) ||
             !State.Drones.TryGetValue(State.SelectedDroneId, out var selected) || !selected.Discovered ||
             !State.Donors.Keys.ToHashSet().SetEquals(Definition.Donors.Select(donor => donor.Id)))
             throw new InvalidDataException("Сохранение не соответствует определению экспедиции.");
+        ValidateTerminalState();
 
         var cargoIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (id, drone) in State.Drones)
@@ -327,8 +347,8 @@ public sealed partial class ExpeditionEngine
             drone.Position = nearest ?? throw new InvalidDataException(
                 $"Не удалось найти доступную позицию для {drone.Id} после обновления планировки.");
         }
-        if (State.Mode == ControlMode.Combined && selectedPosition != ActiveDrone.Position)
-            State.Laser = ActiveDrone.Position;
+        if (selectedPosition != ActiveDrone.Position)
+            FollowDrone();
         State.LayoutRevision = Definition.LayoutRevision;
     }
 

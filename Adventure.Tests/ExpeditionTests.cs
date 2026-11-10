@@ -403,7 +403,8 @@ public sealed class ExpeditionTests
         }
     }
 
-    private static void Navigate(ExpeditionEngine engine, string levelName, int x, int y)
+    internal static void Navigate(ExpeditionEngine engine, string levelName, int x, int y,
+        Action<FlightDirection>? move = null)
     {
         var drone = engine.ActiveDrone;
         var target = new WorldPosition(engine.Levels.Values.Single(level => level.Name == levelName).Id, x, y);
@@ -453,7 +454,12 @@ public sealed class ExpeditionTests
         for (var current = target; current != start; current = visited[current].Previous)
             route.Push(visited[current].Direction);
         foreach (var direction in route)
-            Step(engine, direction);
+        {
+            if (move == null)
+                Step(engine, direction);
+            else
+                move(direction);
+        }
         Assert.That(drone.Position, Is.EqualTo(target));
 
         bool Passable(WorldPosition position)

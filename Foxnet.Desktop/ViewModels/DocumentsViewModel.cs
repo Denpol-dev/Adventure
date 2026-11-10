@@ -19,6 +19,7 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasPreview))] private FlowDocument? _preview;
     [ObservableProperty] private bool _canOpenExternally;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasOffer))] private TradeOffer? _offer;
+    [ObservableProperty] private string? _publicationState;
 
     public DocumentsViewModel(LocalSession session, string dataDirectory)
     {
@@ -39,12 +40,23 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
         Selected = Documents.FirstOrDefault(document => document.Info.EventId == eventId);
     }
 
-    private void Refresh() => Documents = _library.List().Select(document => new DocumentRow(document)).ToArray();
+    public void Refresh()
+    {
+        var documents = _library.List().Select(document => new DocumentRow(document)).ToArray();
+        if (!Documents.SequenceEqual(documents))
+        {
+            var selected = Selected?.Info.EventId;
+            Documents = documents;
+            Selected = documents.FirstOrDefault(row => row.Info.EventId == selected);
+        }
+        RefreshOffer();
+    }
 
     partial void OnSelectedChanged(DocumentRow? value) => Run(() =>
     {
         _opened = null;
         Offer = null;
+        PublicationState = null;
         Preview = null;
         CanOpenExternally = false;
         if (value == null)
@@ -56,7 +68,17 @@ public sealed partial class DocumentsViewModel : ScreenViewModel
         RefreshOffer();
     });
 
-    public void RefreshOffer() => Offer = _opened == null ? null : _session.GetDocumentOffer(_opened.Info.EventId);
+    private void RefreshOffer()
+    {
+        Offer = _opened == null ? null : _session.GetDocumentOffer(_opened.Info.EventId);
+        PublicationState = _opened == null ? null : _session.GetPublication(_opened.Info.EventId)?.Status switch
+        {
+            PublicationStatus.Reviewing => "Редакция проверяет материал.",
+            PublicationStatus.Held => "Материал оставлен в архиве редакции.",
+            PublicationStatus.Published => "Материал опубликован. Статья находится в переписке с журналисткой.",
+            _ => null
+        };
+    }
 
     [RelayCommand]
     private void SendMaterial() => Run(() =>

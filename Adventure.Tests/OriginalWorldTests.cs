@@ -35,7 +35,7 @@ namespace Adventure.Tests
                 Assert.That(level.Rows, Has.Count.EqualTo(28));
                 Assert.That(level.Rows.Select(row => row.Length), Is.All.EqualTo(100));
                 Assert.That(hash, Is.EqualTo(expectedHash).IgnoreCase);
-                Assert.That(level.Objects, Has.Count.EqualTo(objectCount));
+                Assert.That(level.Objects.Count(obj => obj.System == null), Is.EqualTo(objectCount));
                 Assert.That(level.Objects.Select(obj => (obj.X, obj.Y)), Is.Unique);
             });
         }
@@ -45,14 +45,16 @@ namespace Adventure.Tests
         {
             var definition = WorldFiles.Load(WorldFiles.DefaultPath);
             var world = new InitLevels(definition);
-            var levels = world.Levels.Values.ToDictionary(level => (level.GlobalX, level.GlobalY));
+            var levels = world.Levels.Values.Where(level => !level.Underground)
+                .ToDictionary(level => (level.GlobalX, level.GlobalY));
 
             Assert.Multiple(() =>
             {
-                Assert.That(world.Levels, Has.Count.EqualTo(16));
+                Assert.That(levels, Has.Count.EqualTo(16));
                 Assert.That(world.Levels.Keys, Is.Unique);
                 Assert.That(definition.Levels.SelectMany(level => level.Objects).Select(obj => obj.Id), Is.Unique);
-                Assert.That(definition.Levels.Sum(level => level.Objects.Count), Is.EqualTo(83));
+                Assert.That(definition.Levels.Where(level => !level.Underground)
+                    .Sum(level => level.Objects.Count(obj => obj.System == null)), Is.EqualTo(83));
                 Assert.That(world.FirstLevel.Name, Is.EqualTo("N24S56"));
                 Assert.That((world.Start.X, world.Start.Y), Is.EqualTo((43, 25)));
             });

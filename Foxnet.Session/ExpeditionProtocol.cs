@@ -7,12 +7,16 @@ public readonly record struct WorldPosition(Guid LevelId, int X, int Y);
 
 public enum ControlMode { Drone, Laser, Combined }
 
-public enum FlightAction { Move, CycleMode, SelectDrone, Interact, Charge, Install, Remove, Salvage, UseTool, Drop, Take }
+public enum FlightAction
+{
+    Move, CycleMode, SelectDrone, Interact, Charge, Install, Remove, Salvage, UseTool, Drop, Take,
+    SignInTerminal, SignOutTerminal, ResetTerminalPassword, ReadTerminalFile, ExtractEvidence, OperateTerminal, DispatchCargo
+}
 
 public enum FlightDirection { Left, Right, Top, Bottom }
 
 public sealed record FlightCommand(FlightAction Action, FlightDirection? Direction = null, string? Id = null,
-    string? Slot = null, IReadOnlyList<string>? Items = null);
+    string? Slot = null, IReadOnlyList<string>? Items = null, string? Login = null, string? Password = null);
 
 public sealed record FlightResult(bool Applied, string Message, string? Menu = null, string? Outcome = null);
 

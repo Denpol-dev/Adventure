@@ -87,7 +87,7 @@ public sealed class ExpeditionOwner : IDisposable
                 result = _engine.Apply(command);
                 if (result.Reply.Applied)
                 {
-                    SaveCurrentState();
+                    SaveCurrentState(result.Export);
                 }
             }
             catch
@@ -103,10 +103,10 @@ public sealed class ExpeditionOwner : IDisposable
         }
     }
 
-    private void SaveCurrentState()
+    private void SaveCurrentState(ExpeditionExport? export = null)
     {
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(_engine.State);
-        _revision = _store.Save(_world.Id, _revision, payload);
+        _revision = _store.Save(_world.Id, _revision, payload, export);
         _saved = payload;
     }
 

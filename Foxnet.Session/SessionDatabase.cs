@@ -4,7 +4,7 @@ namespace Foxnet.Session;
 
 internal sealed partial class SessionDatabase(string path)
 {
-    private const int SchemaVersion = 4;
+    private const int SchemaVersion = 5;
     private readonly string _path = Path.GetFullPath(path);
 
     public SqliteConnection Open()
@@ -77,8 +77,11 @@ internal sealed partial class SessionDatabase(string path)
             );
             """);
 
-        CreateWorldSchema(connection, transaction);
-        Execute(connection, transaction, "PRAGMA user_version = 4;");
+        if (version < 4)
+            CreateWorldSchema(connection, transaction);
+        if (version < 5)
+            CreateExpeditionExportSchema(connection, transaction);
+        Execute(connection, transaction, "PRAGMA user_version = 5;");
     }
 
     private static void CreateInitialSchema(SqliteConnection connection, SqliteTransaction transaction)

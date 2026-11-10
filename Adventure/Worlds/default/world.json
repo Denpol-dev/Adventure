@@ -22,7 +22,11 @@
     "levels/N26S55.json",
     "levels/N26S56.json",
     "levels/N26S57.json",
-    "levels/N26S58.json"
+    "levels/N26S58.json",
+    "levels/U11.json",
+    "levels/U21.json",
+    "levels/U12.json",
+    "levels/U22.json"
   ],
   "buildings": [
     {
@@ -74,6 +78,12 @@
         "BAY-14",
         "BAY-15",
         "BAY-16"
+      ]
+    },
+    {
+      "id": "deep-array",
+      "rooms": [
+        "galleries"
       ]
     }
   ],
@@ -972,6 +982,50 @@
         },
         "width": 2,
         "height": 2
+      },
+      {
+        "buildingId": "deep-array",
+        "roomId": "galleries",
+        "origin": {
+          "levelId": "cd7ae43d-fcb7-5c73-a7c2-b87fecc8d93d",
+          "x": 0,
+          "y": 0
+        },
+        "width": 100,
+        "height": 28
+      },
+      {
+        "buildingId": "deep-array",
+        "roomId": "galleries",
+        "origin": {
+          "levelId": "bbfb471b-fe55-5efb-a839-7adb92b77d94",
+          "x": 0,
+          "y": 0
+        },
+        "width": 100,
+        "height": 28
+      },
+      {
+        "buildingId": "deep-array",
+        "roomId": "galleries",
+        "origin": {
+          "levelId": "79702433-71fa-55ea-8c92-f30bd2c7214f",
+          "x": 0,
+          "y": 0
+        },
+        "width": 100,
+        "height": 28
+      },
+      {
+        "buildingId": "deep-array",
+        "roomId": "galleries",
+        "origin": {
+          "levelId": "31ce8282-4359-5c11-8b2b-5c6ff5097efa",
+          "x": 0,
+          "y": 0
+        },
+        "width": 100,
+        "height": 28
       }
     ],
     "layoutRevision": 1

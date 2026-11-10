@@ -52,6 +52,64 @@
       "requiredItem": "hardDriveXD23Full",
       "item": "hardDriveXD23",
       "completesGame": true
+    },
+    {
+      "id": "reserve-array",
+      "kind": "terminal",
+      "x": 26,
+      "y": 11,
+      "name": "HAESEI / резервная станция дальней связи",
+      "system": {
+        "files": [
+          {
+            "id": "relay-fault",
+            "folder": "Диагностика",
+            "title": "Отказ канала дальнего следования",
+            "text": "Сгорела секция P-4, обходная муфта на месте. Отдельная цепь концевого выключателя исправна. Подключение муфты выполнить захватом. До калибровки несущей запрещён широкополосный экспорт.",
+            "role": "operator"
+          }
+        ],
+        "accounts": [
+          {
+            "login": "relay.eng",
+            "password": "reserve-17",
+            "role": "operator"
+          }
+        ],
+        "operations": [
+          {
+            "id": "relay-diagnose",
+            "title": "Диагностировать контур",
+            "report": "Разрыв в P-4 подтверждён.",
+            "role": "operator",
+            "requiresFiles": [
+              "parts-register",
+              "relay-fault"
+            ]
+          },
+          {
+            "id": "relay-jumper",
+            "title": "Переставить резервную муфту",
+            "report": "Резервная цепь замкнута.",
+            "role": "operator",
+            "requiresOperations": [
+              "relay-diagnose"
+            ],
+            "requiresEquipment": [
+              "gripper"
+            ]
+          },
+          {
+            "id": "relay-live",
+            "title": "Настроить несущую",
+            "report": "Резервный канал открыт. Орбитальный центр доступен.",
+            "role": "operator",
+            "requiresOperations": [
+              "relay-jumper"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

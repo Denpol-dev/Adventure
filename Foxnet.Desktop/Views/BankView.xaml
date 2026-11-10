@@ -70,6 +70,27 @@
             <Border Style="{StaticResource ErrorBanner}">
                 <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
             </Border>
+            <Border Style="{StaticResource Card}" Margin="0,10,0,0"
+                    Visibility="{Binding HasOrbitalOffers, Converter={StaticResource BoolVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Груз на орбите" Style="{StaticResource SectionTitle}" Margin="0,0,0,10"/>
+                    <ItemsControl ItemsSource="{Binding OrbitalOffers}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,0,0,7">
+                                    <Button DockPanel.Dock="Right" Content="Продать" CommandParameter="{Binding}" Margin="10,0,0,0"
+                                            Command="{Binding DataContext.SellOrbitalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Cargo.Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource MutedText}"/>
+                                        <TextBlock Text="{Binding Appraisal}" Style="{StaticResource MutedText}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
             <Border Style="{StaticResource Card}" Margin="0,10,0,0">
                 <StackPanel>
                     <TextBlock Text="Входящие запросы" Style="{StaticResource SectionTitle}" Margin="0,0,0,10"/>

@@ -27,6 +27,7 @@ namespace Adventure.Entities.Worlds
         public required string Name { get; init; }
         public required int GlobalX { get; init; }
         public required int GlobalY { get; init; }
+        public bool Underground { get; init; }
         public required int Width { get; init; }
         public required int Height { get; init; }
         public required List<string> Rows { get; init; }
@@ -52,6 +53,7 @@ namespace Adventure.Entities.Worlds
         public ConsoleColor? Color { get; init; }
         public bool IsAlien { get; init; }
         public bool CompletesGame { get; init; }
+        public TerminalSystem? System { get; init; }
     }
 
     public enum ObjectKind { Chest, Terminal, ForceField, Sign }

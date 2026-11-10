@@ -23,6 +23,9 @@ public enum ValueKind { PhysicalItem, Document }
 public enum TradeError { None, Unavailable, DeliveryRequired, IdConflict, AlreadyTransferred }
 public sealed record TradeResult(TradeError Error, long Appraisal = 0, long Paid = 0);
 public sealed record TradeOffer(string Id, string BuyerId, string Buyer, long Appraisal);
+public sealed record OrbitalOffer(TradeOffer Offer, string Title, int Weight, string Condition);
+public enum PublicationStatus { Reviewing, Held, Published }
+public sealed record Publication(string DocumentId, string Title, PublicationStatus Status, DateTimeOffset? PublishedAt);
 public interface IPhysicalDelivery
 {
     bool IsDelivered(string valueId, string buyerId);

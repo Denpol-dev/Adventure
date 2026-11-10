@@ -93,6 +93,63 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
             Salvage(menu["donor:".Length..]);
         else if (menu.StartsWith("crate:", StringComparison.Ordinal))
             OpenCrate(menu["crate:".Length..]);
+        else if (menu.StartsWith("terminal:", StringComparison.Ordinal))
+            OpenTerminal(menu["terminal:".Length..]);
+    }
+
+    private void OpenTerminal(string id)
+    {
+        while (owner.Read(engine => engine.Terminal(id)) is { } panel)
+        {
+            int index = Pick(panel.Title, panel.Options.Select(option => option.Title).ToArray(), _message);
+            if (index < 0)
+                return;
+            var option = panel.Options[index];
+            var command = new FlightCommand(option.Action, Id: id, Slot: option.Subject);
+            switch (option.Action)
+            {
+                case FlightAction.SignInTerminal:
+                case FlightAction.ResetTerminalPassword:
+                    string? login = Prompt(panel.Title, "Логин", secret: false);
+                    if (login == null)
+                        continue;
+                    string? password = Prompt(panel.Title,
+                        option.Action == FlightAction.ResetTerminalPassword ? "Новый пароль" : "Пароль", secret: true);
+                    if (password == null)
+                        continue;
+                    command = command with { Login = login, Password = password };
+                    break;
+                case FlightAction.DispatchCargo:
+                    var cargo = owner.Read(engine => engine.DispatchableCargo());
+                    int selected = Pick("Груз для доставки", cargo.Select(entry => $"{entry.Name} · {entry.Weight} кг · {entry.Detail}").ToArray(), "");
+                    if (selected < 0 || Pick($"Отправить на орбиту: {cargo[selected].Name}?", ["Отмена", "Отправить"], "") != 1)
+                        continue;
+                    command = command with { Slot = cargo[selected].Id };
+                    break;
+            }
+
+            var result = RunCommand(command);
+            if (option.Action == FlightAction.ReadTerminalFile && result?.Reply.Outcome is { } text)
+                ReadJournal(option.Title, text);
+        }
+    }
+
+    private string? Prompt(string title, string label, bool secret)
+    {
+        var input = new System.Text.StringBuilder();
+        while (true)
+        {
+            _display.Menu(title, [$"{label}: {(secret ? new string('*', input.Length) : input.ToString())}"], 0, "");
+            var key = Console.ReadKey(true);
+            if (key.Key == ConsoleKey.Escape)
+                return null;
+            if (key.Key == ConsoleKey.Enter)
+                return input.ToString();
+            if (key.Key == ConsoleKey.Backspace && input.Length > 0)
+                input.Length--;
+            else if (!char.IsControl(key.KeyChar) && input.Length < 96)
+                input.Append(key.KeyChar);
+        }
     }
 
     private void Inventory()
@@ -195,7 +252,7 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
         if (interaction is { Result: InteractionResult.Action, Actor: Terminal { LoadItem: null } terminal } &&
             terminal.Message.Contains('\n'))
         {
-            InMenu(() => ReadJournal(terminal));
+            InMenu(() => ReadJournal(terminal.Name, terminal.Message));
             return;
         }
 
@@ -215,17 +272,17 @@ internal sealed class ExpeditionConsole(ExpeditionOwner owner)
         }
     }
 
-    private void ReadJournal(Terminal terminal)
+    private void ReadJournal(string title, string text)
     {
         int top = 0;
         while (true)
         {
             var size = ExpeditionDisplay.Size();
-            var lines = WrapJournal(terminal.Message, Math.Max(1, size.Width));
+            var lines = WrapJournal(text, Math.Max(1, size.Width));
             int page = Math.Max(1, size.Height - ExpeditionDisplay.JournalHeaderHeight);
             int last = Math.Max(0, lines.Count - page);
             top = Math.Clamp(top, 0, last);
-            _display.Journal(terminal.Name, lines, top, size);
+            _display.Journal(title, lines, top, size);
 
             while (!Console.KeyAvailable && ExpeditionDisplay.Size() == size)
                 Thread.Sleep(35);

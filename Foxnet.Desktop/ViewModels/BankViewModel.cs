@@ -12,6 +12,7 @@ public sealed partial class BankViewModel(LocalSession session) : ScreenViewMode
     [ObservableProperty] private IReadOnlyList<RequestRow> _incoming = [];
     [ObservableProperty] private IReadOnlyList<RequestRow> _outgoing = [];
     [ObservableProperty] private IReadOnlyList<EntryRow> _history = [];
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasOrbitalOffers))] private IReadOnlyList<OrbitalRow> _orbitalOffers = [];
     [ObservableProperty] private IReadOnlyList<ContactCard> _recipients = [];
     [ObservableProperty] private ContactCard? _recipient;
     [ObservableProperty] private string _amount = "";
@@ -20,6 +21,7 @@ public sealed partial class BankViewModel(LocalSession session) : ScreenViewMode
     [ObservableProperty] private string _formTitle = "";
     private bool _request;
     private Guid _operationId;
+    public bool HasOrbitalOffers => OrbitalOffers.Count > 0;
 
     public void Refresh()
     {
@@ -28,9 +30,25 @@ public sealed partial class BankViewModel(LocalSession session) : ScreenViewMode
         Incoming = bank.Requests.Where(request => request.Incoming).Select(request => new RequestRow(request)).ToArray();
         Outgoing = bank.Requests.Where(request => !request.Incoming).Select(request => new RequestRow(request)).ToArray();
         History = bank.History.Select(entry => new EntryRow(entry)).ToArray();
+        OrbitalOffers = session.GetOrbitalOffers().Select(offer => new OrbitalRow(offer)).ToArray();
         if (Editing)
             RefreshRecipients();
     }
+
+    [RelayCommand]
+    private void SellOrbital(OrbitalRow? row) => Run(() =>
+    {
+        if (row == null || !Confirm($"Передать «{row.Cargo.Title}» контакту {row.Cargo.Offer.Buyer}?\n\n" +
+            $"Оценка {row.Appraisal}. Выплата зависит от средств покупателя."))
+            return;
+        var offer = row.Cargo.Offer;
+        var result = session.TransferValue(Guid.NewGuid(), offer.Id, offer.BuyerId);
+        Refresh();
+        if (result.Error == TradeError.None)
+            Notice = $"Груз передан. Выплата {Format(result.Paid)}.";
+        else
+            Error = "Груз уже передан или покупатель недоступен.";
+    });
 
     [RelayCommand]
     private void StartTransfer() => StartForm(request: false);
@@ -147,4 +165,10 @@ public sealed record EntryRow(BankEntry Entry)
 {
     public string Amount => (Entry.Amount > 0 ? "+" : "") + BankViewModel.Format(Entry.Amount);
     public string Date => Entry.At.ToLocalTime().ToString("dd.MM.yyyy  HH:mm");
+}
+
+public sealed record OrbitalRow(OrbitalOffer Cargo)
+{
+    public string Appraisal => BankViewModel.Format(Cargo.Offer.Appraisal);
+    public string Detail => $"{Cargo.Weight} кг · {Cargo.Condition} · {Cargo.Offer.Buyer}";
 }

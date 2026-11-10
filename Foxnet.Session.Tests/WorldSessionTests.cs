@@ -82,7 +82,7 @@ public sealed class WorldSessionTests
     }
 
     [TestCase("unknown", "unknown-reminder", 5, 3, "Ты там уснул?", 3)]
-    [TestCase("journalist", "journalist-intro", 10, 7, "Здравствуйте. Меня зовут Со Ен-хи.", 3)]
+    [TestCase("journalist", "journalist-intro", 5, 7, "Здравствуйте. Меня зовут Со Ен-хи.", 3)]
     [TestCase("ivan", "ivan-intro", 11, 5, "Дарова", 3)]
     public void IncomingParagraphsArriveInOrderAcrossRestartAndRepliesWaitUntilTheEnd(string contact, string messageId,
         int startMinute, int partCount, string firstLine, int replyCount)
@@ -195,7 +195,7 @@ public sealed class WorldSessionTests
         Assert.That(reopened.SelectReply("unknown-dispute", "refuse"), Is.True);
         Assert.Multiple(() =>
         {
-            Assert.That(reopened.GetContacts().Single().Blocked, Is.True);
+            Assert.That(reopened.GetContacts().Single(contact => contact.Id == "unknown").Blocked, Is.True);
             Assert.That(reopened.OpenConversation("unknown").SelectMany(message => message.Replies), Is.Empty);
             Assert.That(reopened.GetBank().Requests.Single().Status, Is.EqualTo(RequestStatus.Cancelled));
             Assert.That(reopened.RequestPayment(Guid.NewGuid(), "unknown", 5, "Просьба").Error, Is.EqualTo(BankError.Unavailable));
@@ -224,7 +224,7 @@ public sealed class WorldSessionTests
         }
         _clock.MoveSeconds(288);
         session.AdvanceWorld();
-        Assert.That(session.GetContacts().Single().Blocked, Is.False);
+        Assert.That(session.GetContacts().Single(contact => contact.Id == "unknown").Blocked, Is.False);
         _clock.Move(6.01);
 
         var reopened = Open();
@@ -240,7 +240,7 @@ public sealed class WorldSessionTests
             Assert.That(history.SelectMany(message => message.Replies), Is.Empty);
             Assert.That(reopened.GetBank().Requests.Single().Status, Is.EqualTo(RequestStatus.Expired));
             Assert.That(reopened.GetConversations().Select(contact => contact.Id),
-                Is.EqualTo(new[] { "ivan", "journalist", "security", "unknown" }));
+                Is.EqualTo(new[] { "ivan", "security", "unknown", "journalist" }));
             Assert.That(reopened.GetNotifications().Revision, Is.EqualTo(revision));
         });
     }

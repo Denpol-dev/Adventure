@@ -94,6 +94,8 @@ public sealed partial class ExpeditionEngine
 
     private void Survey(WorldPosition origin, bool orbital)
     {
+        if (orbital && Levels[origin.LevelId].Underground)
+            return;
         string? building = _map.Interior(origin);
         if (!orbital && building == null)
             return;

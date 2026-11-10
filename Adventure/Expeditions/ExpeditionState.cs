@@ -65,4 +65,8 @@ public sealed class ExpeditionState
     public HashSet<string> Looted { get; init; } = [];
     public Dictionary<string, int> TerminalUses { get; init; } = [];
     public List<DropCrate> DropCrates { get; init; } = [];
+    public Dictionary<string, TerminalProgress> Terminals { get; init; } = [];
+    public HashSet<string> ReadFiles { get; init; } = [];
+    public HashSet<string> ExtractedFiles { get; init; } = [];
+    public HashSet<string> Operations { get; init; } = [];
 }
