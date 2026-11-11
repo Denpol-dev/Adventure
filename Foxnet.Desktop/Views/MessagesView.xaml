@@ -134,7 +134,7 @@
                             <TextBlock Text="{Binding Selected.Nickname, StringFormat={}{0} печатает…}"
                                        Style="{StaticResource MutedText}" FontStyle="Italic" Margin="0,0,0,4"
                                        Visibility="{Binding IsTyping, Converter={StaticResource BoolVisibility}}"/>
-                            <StackPanel Visibility="{Binding HasReplies, Converter={StaticResource BoolVisibility}}">
+                            <StackPanel Visibility="{Binding ShowReplyOptions, Converter={StaticResource BoolVisibility}}">
                                 <TextBlock Text="ВАРИАНТЫ ОТВЕТА" Style="{StaticResource Eyebrow}" Margin="0,1,0,8"/>
                                 <ScrollViewer MaxHeight="270" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                     <ItemsControl ItemsSource="{Binding Replies}">
@@ -150,6 +150,15 @@
                                     </ItemsControl>
                                 </ScrollViewer>
                             </StackPanel>
+                            <DockPanel Margin="0,8,0,0">
+                                <Button DockPanel.Dock="Right" Content="Отправить" Command="{Binding SendChatCommand}"
+                                        Style="{StaticResource PrimaryButton}" VerticalAlignment="Bottom" Margin="8,0,0,0"/>
+                                <TextBox Text="{Binding Draft, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Новое сообщение" MaxLength="1200"
+                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="42" MaxHeight="105"
+                                         VerticalScrollBarVisibility="Auto"/>
+                            </DockPanel>
+                            <TextBlock Text="{Binding DialogueMode}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             <TextBlock Text="{Binding Notice}" Style="{StaticResource NoticeText}"/>
                             <Border Style="{StaticResource ErrorBanner}">
                                 <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>

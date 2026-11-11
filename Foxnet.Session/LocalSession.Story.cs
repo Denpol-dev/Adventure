@@ -118,6 +118,11 @@ public sealed partial class LocalSession
                         ?? throw new InvalidDataException("Пустое сообщение FOXNET.");
                     DeliverMessagePart(connection, transaction, next.Id, part, next.Due);
                     break;
+                case ChatFallbackEvent:
+                    var fallback = JsonSerializer.Deserialize<ChatFallback>(next.Subject)
+                        ?? throw new InvalidDataException("Пустой ответ чата FOXNET.");
+                    DeliverDialogueFallback(connection, transaction, next.Id, fallback, next.Due);
+                    break;
                 case MessageReplyEvent:
                     var reply = JsonSerializer.Deserialize<MessageReply>(next.Subject)
                         ?? throw new InvalidDataException("Пустой ответ FOXNET.");

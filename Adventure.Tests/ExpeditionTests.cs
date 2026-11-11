@@ -261,6 +261,58 @@ public sealed class ExpeditionTests
     }
 
     [Test]
+    public void TheUndergroundRouteUsesLidarAndItsControlsRequireOrderedWork()
+    {
+        var engine = At("N24S56", 47, 26);
+        Apply(engine, FlightAction.Salvage, id: "DN-01-01");
+        Navigate(engine, "N24S56", 41, 21);
+        Apply(engine, FlightAction.Install, "DN-01-01", EquipmentSlot.Lidar);
+        Navigate(engine, "N23S57", 25, 8);
+        var surface = engine.ActiveDrone.Position;
+        Command(FlightAction.SignInTerminal, "deep-entrance", login: "shaft.eng", password: "depth-04");
+        Assert.That(engine.Apply(new(FlightAction.OperateTerminal, Id: "deep-entrance", Slot: "shaft-down")).Reply.Applied,
+            Is.False);
+        Command(FlightAction.ReadTerminalFile, "deep-entrance", "shaft-inspection");
+        Command(FlightAction.OperateTerminal, "deep-entrance", "shaft-unlock");
+        Command(FlightAction.OperateTerminal, "deep-entrance", "shaft-down");
+        Assert.That(engine.Levels[engine.ActiveDrone.Position.LevelId].Name, Is.EqualTo("U11"));
+        Assert.That(engine.State.Laser, Is.EqualTo(surface));
+        var near = engine.ActiveDrone.Position with { X = 11 };
+        Assert.That(engine.ViewCell(near).Visibility, Is.EqualTo(CellVisibility.Visible));
+        Apply(engine, FlightAction.CycleMode);
+        Apply(engine, FlightAction.CycleMode);
+        Assert.That(engine.ViewCell(near).Visibility, Is.EqualTo(CellVisibility.Remembered));
+        Assert.That(engine.ViewPosition.LevelId, Is.EqualTo(surface.LevelId));
+        Apply(engine, FlightAction.CycleMode);
+        Assert.That(engine.ViewCell(near).Visibility, Is.EqualTo(CellVisibility.Visible));
+
+        Navigate(engine, "U11", 50, 14);
+        Command(FlightAction.OperateTerminal, "deep-distributor", "deep-power");
+        Navigate(engine, "U21", 18, 14);
+        Command(FlightAction.ReadTerminalFile, "deep-recorder", "experiment-sequence");
+        Navigate(engine, "U12", 50, 13);
+        Command(FlightAction.OperateTerminal, "deep-calibration", "deep-calibrate");
+        Navigate(engine, "U22", 18, 14);
+        Assert.That(engine.Apply(new(FlightAction.ReadTerminalFile, Id: "deep-central", Slot: "core-sample")).Reply.Applied,
+            Is.False);
+        engine.State.Operations.Add("orbit-link");
+        Command(FlightAction.ReadTerminalFile, "deep-central", "core-sample");
+        Command(FlightAction.ReadTerminalFile, "deep-central", "core-warnings");
+        Command(FlightAction.OperateTerminal, "deep-central", "deep-passive");
+        Assert.That(engine.Apply(new(FlightAction.OperateTerminal, Id: "deep-central", Slot: "deep-passive")).Reply.Applied,
+            Is.False);
+        Navigate(engine, "U11", 10, 14);
+        Command(FlightAction.OperateTerminal, "deep-return", "shaft-up");
+        Assert.That(engine.ActiveDrone.Position, Is.EqualTo(surface));
+
+        void Command(FlightAction action, string id, string? slot = null, string? login = null, string? password = null)
+        {
+            var result = engine.Apply(new(action, Id: id, Slot: slot, Login: login, Password: password)).Reply;
+            Assert.That(result.Applied, Is.True, result.Message);
+        }
+    }
+
+    [Test]
     public void TheLastDepletedBatteryEndsTheExpedition()
     {
         var engine = At("N24S55", 40, 14);

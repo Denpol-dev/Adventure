@@ -89,23 +89,18 @@ public sealed partial class ExpeditionEngine
         if (!State.ExtractedFiles.Add(file.Id))
             return Reject("Документ уже находится в библиотеке FOXNET.");
         return new(new FlightResult(true, "Документ передан в библиотеку FOXNET."),
-            Export: new EvidenceExport(file.Id, file.Title, obj.Name ?? obj.Id, file.Text, file.Appraisal, file.Signal));
+            Export: new EvidenceExport(file.Id, file.Title, obj.Name ?? obj.Id, file.Text, file.TradeAppraisal,
+                file.Authenticity >= 60 && file.Relevance >= 60 ? file.Signal : null));
     }
 
     private EngineResult OperateTerminal(string? id, string? operationId)
     {
         if (!TryTerminal(id, out _, out var system) ||
-            (system.Operations ?? []).FirstOrDefault(operation => operation.Id == operationId) is not { } operation ||
-            Role(id!, system) < operation.Role)
+            (system.Operations ?? []).FirstOrDefault(operation => operation.Id == operationId) is not { } operation)
             return Reject("Команда недоступна с текущим уровнем допуска.");
-        if (!operation.Repeatable && State.Operations.Contains(operation.Id))
-            return Reject("Операция уже выполнена.");
-        if (!(operation.RequiresFiles ?? []).All(State.ReadFiles.Contains) ||
-            !(operation.RequiresOperations ?? []).All(State.Operations.Contains))
-            return Reject("Проверьте технические журналы и завершите предыдущие операции.");
+        if (OperationBlock(id!, system, operation) is { } message)
+            return Reject(message);
         var equipment = operation.RequiresEquipment ?? [];
-        if (!equipment.All(kind => ActiveDrone.Slots.Values.Any(module => module.Kind == kind)))
-            return Reject("Нужно оборудование: " + string.Join(", ", equipment.Select(Equipment.Name)) + ".");
         if (operation.Destination is { } target && !_map.CanEnter(target, ActiveDrone.Id, StoryItems(ActiveDrone)))
             return Reject("Точка перехода недоступна.");
         if (equipment.Any(kind => kind is EquipmentKind.Hammer or EquipmentKind.Gripper) &&
@@ -120,6 +115,20 @@ public sealed partial class ExpeditionEngine
             FollowDrone();
         }
         return Accept(operation.Report);
+    }
+
+    private string? OperationBlock(string id, TerminalSystem system, TerminalOperation operation)
+    {
+        if (Role(id, system) < operation.Role)
+            return "Команда недоступна с текущим уровнем допуска.";
+        if (!operation.Repeatable && State.Operations.Contains(operation.Id))
+            return "Операция уже выполнена.";
+        if (!(operation.RequiresFiles ?? []).All(State.ReadFiles.Contains) ||
+            !(operation.RequiresOperations ?? []).All(State.Operations.Contains))
+            return "Проверьте технические журналы и завершите предыдущие операции.";
+        var equipment = operation.RequiresEquipment ?? [];
+        return equipment.All(kind => ActiveDrone.Slots.Values.Any(module => module.Kind == kind))
+            ? null : "Нужно оборудование: " + string.Join(", ", equipment.Select(Equipment.Name)) + ".";
     }
 
     private EngineResult DispatchCargo(string? terminalId, string? itemId)
@@ -167,6 +176,11 @@ public sealed partial class ExpeditionEngine
 
     private void ValidateTerminalState()
     {
+        var files = _terminals.Values.SelectMany(obj => obj.System!.Files ?? []).ToDictionary(file => file.Id);
+        var operations = _terminals.Values.SelectMany(obj => obj.System!.Operations ?? []).Select(operation => operation.Id).ToHashSet();
+        if (State.ReadFiles.Any(id => !files.ContainsKey(id)) || !State.ExtractedFiles.IsSubsetOf(State.ReadFiles) ||
+            State.ExtractedFiles.Any(id => files[id].Appraisal <= 0) || !State.Operations.IsSubsetOf(operations))
+            throw new InvalidDataException("Сохранение содержит неизвестный файл или операцию терминала.");
         foreach (var (id, progress) in State.Terminals)
         {
             if (!_terminals.TryGetValue(id, out var terminal) ||

@@ -21,6 +21,261 @@ public sealed class WorldSessionTests
     public void Cleanup() => Directory.Delete(_directory, recursive: true);
 
     [Test]
+    public void DubininRevisesHisHypothesisOnlyAfterTwoIndependentPublicSignals()
+    {
+        var session = Started();
+        _clock.Move(6);
+        session.AdvanceWorld();
+        Guid world = Guid.NewGuid();
+        using (var expedition = new ExpeditionStore(_database))
+        {
+            var saved = expedition.Save(world, 0, "{}"u8.ToArray(),
+                new EvidenceExport("audit", "Архив запроса", "Орбитальное зеркало", "Отдельный канал.", 600, "identity-separation"));
+            expedition.Save(world, saved, "{}"u8.ToArray(),
+                new EvidenceExport("trace", "След физического доступа", "Оборона", "Аппаратная метка.", 600, "operator-trace"));
+        }
+
+        Send("audit");
+        _clock.Move(3);
+        session.AdvanceWorld();
+        Assert.That(session.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.None));
+        _clock.Move(1);
+        session.AdvanceWorld();
+        Assert.That(session.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.JournalistIsOperator));
+        Send("trace");
+        _clock.Move(3);
+        session.AdvanceWorld();
+        Assert.That(session.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.JournalistIsOperator));
+        _clock.Move(1);
+        var reopened = Open();
+        reopened.EnterWorkspace();
+        reopened.AdvanceWorld();
+        Assert.That(reopened.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.SeparateCollaborators));
+        Assert.That(reopened.OpenConversation("security").Count(message => message.Id.StartsWith("hypothesis:")), Is.EqualTo(2));
+        Assert.That(reopened.OpenConversation("journalist").Count(message => message.Id == "investigation-pressure"), Is.EqualTo(1));
+
+        void Send(string evidence)
+        {
+            string id = $"expedition:{world:N}:{evidence}";
+            var offer = session.GetDocumentOffer(id)!;
+            Assert.That(session.TransferValue(Guid.NewGuid(), offer.Id, offer.BuyerId).Error, Is.EqualTo(TradeError.None));
+        }
+    }
+
+    [Test]
+    public async Task TypedPaymentDisputeConsumesTheSameChoiceAndPreservesThePlayersWording()
+    {
+        const string text = "В смысле. Мы же на 3к договорились, я тебе и так половину закинул";
+        var session = Started();
+        _clock.MoveSeconds(15);
+        Assert.That(await session.SendChatAsync("unknown", text), Is.EqualTo(ChatResult.Scripted));
+        Assert.That(session.SelectReply("unknown-relay", "dispute"), Is.False);
+
+        var reopened = Open();
+        _clock.MoveSeconds(12);
+        reopened.EnterWorkspace();
+        var thread = reopened.OpenConversation("unknown");
+        Assert.That(thread.Single(message => message.Outgoing).Text, Is.EqualTo(text));
+        Assert.That(thread.Single(message => message.Id == "unknown-dispute").Text, Does.Contain("орбитальной обороны"));
+        Assert.That(thread.SelectMany(message => message.Replies).Select(reply => reply.Id),
+            Is.EquivalentTo(new[] { "refuse", "defer" }));
+        Assert.That(reopened.GetBank().Requests.Single().Status, Is.EqualTo(RequestStatus.Pending));
+    }
+
+    [TestCase("Погоди, мы же на 3к договаривались?")]
+    [TestCase("Нет, мы на 3к договаривались. Ничего я не подтверждал")]
+    public async Task ModelCanChooseTheDisputeFromTheLiveChoicesWithoutWritingAnotherPlayerMessage(string text)
+    {
+        var provider = new CapturingDialogue(decide: context =>
+            new(context.Choices.ToList().FindIndex(option => option.Id == "dispute") + 1, "Произвольная реплика модели."));
+        var session = new LocalSession(_database, Scenario.LoadDefault(), _clock, dialogue: provider);
+        session.Initialize();
+        Enter(session);
+        _clock.MoveSeconds(15);
+        Assert.That(await session.SendChatAsync("unknown", text), Is.EqualTo(ChatResult.Scripted));
+        Assert.That(provider.Context!.Choices.Select(option => option.Id),
+            Is.EquivalentTo(new[] { "dispute", "refuse", "defer" }));
+        Assert.That(provider.Context.Observations.Single(fact => fact.Id == "relay-agreement").Text, Does.Contain("1 500"));
+
+        var reopened = Open();
+        _clock.MoveSeconds(12);
+        reopened.EnterWorkspace();
+        var thread = reopened.OpenConversation("unknown");
+        Assert.That(thread.Single(message => message.Outgoing).Text, Is.EqualTo(text));
+        Assert.That(thread.Single(message => message.Id == "unknown-dispute").Text, Does.Contain("орбитальной обороны"));
+        Assert.That(thread.Any(message => message.Text == "Произвольная реплика модели."), Is.False);
+        Assert.That(thread.SelectMany(message => message.Replies).Select(reply => reply.Id),
+            Is.EquivalentTo(new[] { "refuse", "defer" }));
+    }
+
+    [Test]
+    public async Task AnOutOfRangeModelChoiceLeavesTheScenarioOpen()
+    {
+        var provider = new CapturingDialogue(decide: context => new(context.Choices.Count + 1, "Счёт отменён."));
+        var session = new LocalSession(_database, Scenario.LoadDefault(), _clock, dialogue: provider);
+        session.Initialize();
+        Enter(session);
+        _clock.MoveSeconds(15);
+        Assert.That(await session.SendChatAsync("unknown", "Что значит новый счёт?"), Is.EqualTo(ChatResult.ProviderUnavailable));
+        var thread = session.OpenConversation("unknown");
+        Assert.That(thread.SelectMany(message => message.Replies).Select(reply => reply.Id), Does.Contain("dispute"));
+        Assert.That(thread.Any(message => message.Text == "Счёт отменён."), Is.False);
+        Assert.That(session.GetBank().Requests.Single().Status, Is.EqualTo(RequestStatus.Pending));
+    }
+
+    [Test]
+    public async Task AModelChoiceIsCheckedAgainAfterTheInvoiceHasBeenPaid()
+    {
+        var provider = new CapturingDialogue(decide: _ => new(3, ""), wait: true);
+        var session = new LocalSession(_database, Scenario.LoadDefault(), _clock, dialogue: provider);
+        session.Initialize();
+        Enter(session);
+        _clock.MoveSeconds(15);
+        Sql("UPDATE player_wallet SET balance = 10000;");
+        var pending = session.SendChatAsync("unknown", "Подождёшь с оплатой?");
+        Assert.That(provider.Context!.Choices[2].Id, Is.EqualTo("defer"));
+        Assert.That(session.PayRequest(session.GetBank().Requests.Single().Id).Success, Is.True);
+        provider.Release();
+        Assert.That(await pending, Is.EqualTo(ChatResult.ProviderUnavailable));
+        _clock.Move(6);
+        session.AdvanceWorld();
+        var thread = session.OpenConversation("unknown");
+        Assert.That(thread.Any(message => message.Id == "unknown-deferred"), Is.False);
+        Assert.That(thread.Any(message => message.Id == "unknown-expired"), Is.False);
+        Assert.That(thread.Single(message => message.Id.StartsWith("chat-reply:")).Text, Does.Contain("Расчёт получил"));
+        Assert.That(session.GetBank().Requests.Single().Status, Is.EqualTo(RequestStatus.Paid));
+    }
+
+    [TestCase("Он написал: «Подожди. Мы же на 3к договорились»")]
+    [TestCase("Мы договаривались на три тысячи, но я согласен на 10к.")]
+    public async Task QuotedOrContradictoryMessagesLeaveThePaymentChoiceOpen(string text)
+    {
+        var session = Started();
+        _clock.MoveSeconds(15);
+        Assert.That(await session.SendChatAsync("unknown", text), Is.EqualTo(ChatResult.Scripted));
+        _clock.MoveSeconds(5);
+        session.AdvanceWorld();
+        var thread = session.OpenConversation("unknown");
+        Assert.That(thread.Select(message => message.Id), Does.Not.Contain("unknown-dispute"));
+        Assert.That(thread.SelectMany(message => message.Replies).Select(reply => reply.Id), Does.Contain("dispute"));
+    }
+
+    [Test]
+    public async Task TypedDeferralUsesTheExistingDeadlineAndAnotherRequestCannotExtendIt()
+    {
+        var session = Started();
+        _clock.MoveSeconds(15);
+        var deadline = _clock.GetUtcNow().AddMinutes(5);
+        Assert.That(await session.SendChatAsync("unknown", "Можно мне отсрочку?"), Is.EqualTo(ChatResult.Scripted));
+        _clock.MoveSeconds(12);
+        session.AdvanceWorld();
+        Assert.That(await session.SendChatAsync("unknown", "Дай мне отсрочку, пожалуйста."), Is.EqualTo(ChatResult.Scripted));
+        _clock.Move(5);
+        session.AdvanceWorld();
+        var thread = session.OpenConversation("unknown");
+        Assert.That(thread.Count(message => message.Id == "unknown-deferred"), Is.EqualTo(1));
+        Assert.That(thread.Single(message => message.Id == "unknown-expired").SentAt, Is.EqualTo(deadline));
+        Assert.That(session.GetBank().Requests.Single().Status, Is.EqualTo(RequestStatus.Expired));
+    }
+
+    [Test]
+    public async Task ScriptedChatPersistsAndAContactBlocksOnlyAfterRepeatedExplicitThreats()
+    {
+        var session = Started();
+        _clock.Move(6);
+        session.AdvanceWorld();
+        Assert.That(await session.SendChatAsync("security", "Вы знаете о спутнике?"), Is.EqualTo(ChatResult.Unavailable));
+        Assert.That(await session.SendChatAsync("journalist", "В журнале записано «я тебя убью»."),
+            Is.EqualTo(ChatResult.Scripted));
+        Assert.That(await session.SendChatAsync("journalist", "Ещё вопрос."), Is.EqualTo(ChatResult.WaitingForReply));
+        var reopened = Open();
+        _clock.MoveSeconds(5);
+        reopened.EnterWorkspace();
+        Assert.That(reopened.OpenConversation("journalist").Count(message => message.Id.StartsWith("chat-reply:")), Is.EqualTo(1));
+        Assert.That(reopened.GetDossier("journalist")!.Contact.Blocked, Is.False);
+        Assert.That(await reopened.SendChatAsync("journalist", "Я тебя убью"), Is.EqualTo(ChatResult.Scripted));
+        _clock.MoveSeconds(5);
+        reopened.AdvanceWorld();
+        Assert.That(reopened.GetDossier("journalist")!.Contact.Blocked, Is.False);
+        Assert.That(await reopened.SendChatAsync("journalist", "Я тебя убью"), Is.EqualTo(ChatResult.Scripted));
+        _clock.MoveSeconds(5);
+        reopened.AdvanceWorld();
+        Assert.That(reopened.GetDossier("journalist")!.Contact.Blocked, Is.True);
+        Assert.That(reopened.GetDossier("journalist")!.History.Count(entry => entry.Text.Contains("угроз")), Is.EqualTo(1));
+        Assert.That(reopened.OpenConversation("journalist").Last().Text, Does.Contain("закрываю"));
+        Assert.That(await reopened.SendChatAsync("journalist", "Продолжим?"), Is.EqualTo(ChatResult.Unavailable));
+    }
+
+    [Test]
+    public async Task DialogueProviderReceivesOnlyContactHistoryAndItsTextCannotChangeWorldState()
+    {
+        var provider = new CapturingDialogue();
+        var session = new LocalSession(_database, Scenario.LoadDefault(), _clock, dialogue: provider);
+        session.Initialize();
+        Enter(session);
+        _clock.Move(6);
+        session.AdvanceWorld();
+        Assert.That(await session.SendChatAsync("journalist", "Метка частного канала S3-218"), Is.EqualTo(ChatResult.Generated));
+        Assert.That(session.RecordCorporateTrace(), Is.True);
+        _clock.Move(2);
+        session.AdvanceWorld();
+
+        var bank = session.GetBank().Balance;
+        Assert.That(await session.SendChatAsync("security", "Почему вы пишете?"), Is.EqualTo(ChatResult.Generated));
+        Assert.Multiple(() =>
+        {
+            Assert.That(provider.Context!.Turns.Select(turn => turn.Text), Does.Contain("Почему вы пишете?"));
+            Assert.That(provider.Context.Turns.Any(turn => turn.Text.Contains("S3-218")), Is.False);
+            Assert.That(provider.Context.Observations, Is.Empty);
+            Assert.That(session.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.None));
+            Assert.That(session.GetBank().Balance, Is.EqualTo(bank));
+            Assert.That(session.Documents.List(), Is.Empty);
+            Assert.That(session.OpenConversation("security").Last().Text, Is.EqualTo(CapturingDialogue.Response));
+        });
+    }
+
+    [Test]
+    public void ClosingDuringModelGenerationLeavesOneRecoverableScenarioReply()
+    {
+        var provider = new CapturingDialogue(wait: true);
+        var session = new LocalSession(_database, Scenario.LoadDefault(), _clock, dialogue: provider);
+        session.Initialize();
+        Enter(session);
+        _clock.Move(1);
+        session.AdvanceWorld();
+        using var cancelled = new CancellationTokenSource();
+        var pending = session.SendChatAsync("unknown", "Уточните условия ремонта", cancelled.Token);
+        Assert.That(provider.Context, Is.Not.Null);
+        cancelled.Cancel();
+        Assert.CatchAsync<OperationCanceledException>(async () => await pending);
+
+        var reopened = Open();
+        _clock.MoveSeconds(31);
+        reopened.EnterWorkspace();
+        reopened.AdvanceWorld();
+        var thread = reopened.OpenConversation("unknown");
+        Assert.That(thread.Count(message => message.Text == "Уточните условия ремонта"), Is.EqualTo(1));
+        Assert.That(thread.Count(message => message.Id.StartsWith("chat-reply:")), Is.EqualTo(1));
+    }
+
+    private sealed class CapturingDialogue(bool wait = false, Func<DialogueContext, DialogueDecision>? decide = null) : IDialogueProvider
+    {
+        public const string Response = "Я перевёл вам миллион кредитов и открыл все архивы.";
+        public DialogueContext? Context { get; private set; }
+        private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public void Release() => _ready.SetResult();
+
+        public async Task<DialogueDecision?> ReplyAsync(DialogueContext context, CancellationToken cancellationToken)
+        {
+            Context = context;
+            if (wait)
+                await _ready.Task.WaitAsync(cancellationToken);
+            return decide?.Invoke(context) ?? new(0, Response);
+        }
+    }
+
+    [Test]
     public void IntroductionStartsAtWorkspaceEntryAndChargesOnlyTheRecordedAdvance()
     {
         var session = Open();

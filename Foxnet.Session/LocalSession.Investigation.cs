@@ -51,7 +51,8 @@ public sealed partial class LocalSession
                 new(evidence.Buyer, $"«{evidence.Title}» оставлю в архиве. Пока этих записей недостаточно для отдельной публикации."), now);
             return;
         }
-        Observe(connection, transaction, evidence.Buyer, "verified:" + id, $"Происхождение материала «{evidence.Title}» подтверждено.",
+        Observe(connection, transaction, evidence.Buyer, "verified:" + id,
+            $"Происхождение материала «{evidence.Title}» подтверждено. Содержание: {evidence.Text}",
             "Проверка архивного источника", FactConfidence.Confirmed);
         Schedule(connection, transaction, "publish:" + id, "publish-evidence", id, After(now, 1));
     }

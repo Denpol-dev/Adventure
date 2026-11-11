@@ -7,7 +7,12 @@ public enum TerminalRole { Public, Operator, Administrator }
 
 public sealed record TerminalAccount(string Login, string Password, TerminalRole Role);
 public sealed record TerminalFile(string Id, string Folder, string Title, string Text,
-    TerminalRole Role = TerminalRole.Public, long Appraisal = 0, string? Signal = null, string[]? RequiresOperations = null);
+    TerminalRole Role = TerminalRole.Public, long Appraisal = 0, string? Signal = null, string[]? RequiresOperations = null,
+    int Authenticity = 100, int Relevance = 100)
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public long TradeAppraisal => Appraisal == 0 ? 0 : Math.Max(1, Appraisal * Authenticity * Relevance / 10_000);
+}
 public sealed record TerminalOperation(string Id, string Title, string Report, TerminalRole Role = TerminalRole.Public,
     string[]? RequiresOperations = null, string[]? RequiresFiles = null, EquipmentKind[]? RequiresEquipment = null,
     WorldPosition? Destination = null, bool Repeatable = false);
@@ -41,6 +46,7 @@ internal static class TerminalValidator
             foreach (var file in system.Files ?? [])
                 Require(Text(file.Id) && files.Add(file.Id) && Text(file.Title) && Text(file.Folder) && Text(file.Text) &&
                     Enum.IsDefined(file.Role) && file.Appraisal is >= 0 and <= 1_000_000 &&
+                    file.Authenticity is >= 1 and <= 100 && file.Relevance is >= 1 and <= 100 &&
                     (file.Signal == null || file.Appraisal > 0 &&
                         file.Signal is "restricted" or "operator-trace" or "identity-separation" or "automation"), obj.Id);
             foreach (var operation in system.Operations ?? [])

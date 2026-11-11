@@ -24,7 +24,7 @@ internal sealed class ExpeditionDisplay
         var drone = engine.ActiveDrone;
         var info = engine.DroneInfo(drone.Id);
         var level = engine.Levels[engine.ViewPosition.LevelId];
-        Put(rows, 0, $"Квадрант {level.Name} | {engine.State.Mode} | {drone.Id} {info.Name}", ConsoleColor.Cyan);
+        Put(rows, 0, $"Квадрант {level.Name} | {engine.State.Mode} | {drone.Id} {info.Name}", ConsoleColor.Green);
         var battery = drone.Battery;
         Put(rows, 1, $"Цвет: {info.Color} | Заряд: {battery?.Percent ?? 0:0.#}% " +
             $"({battery?.Energy ?? 0:0.##}/{battery?.Capacity ?? 0:0.##} GAh) | Лидар: " +
@@ -50,7 +50,9 @@ internal sealed class ExpeditionDisplay
                 cell.Glyph == '≈' && cell.Color == ConsoleColor.Black;
             var background = black ? ConsoleColor.Gray
                 : cell is { DroneId: not null, Laser: true } ? ConsoleColor.DarkCyan : ConsoleColor.Black;
-            var color = cell.Laser && cell.DroneId == null ? ConsoleColor.Cyan : cell.Color;
+            var color = cell.Laser && cell.DroneId == null ? ConsoleColor.Cyan
+                : cell.DroneId == null && cell.Visibility == CellVisibility.Visible && cell.Glyph is '.' or '▢' or '▧'
+                    ? ConsoleColor.DarkGreen : cell.Color;
             rows[y + HeaderHeight][x] = new Glyph(cell.Laser && cell.DroneId == null ? '+' : cell.Glyph, color, background);
         }
         if (engine.State.GameOver)

@@ -23,12 +23,14 @@ public sealed partial class LocalSession
         return TimeSpan.FromMilliseconds(Math.Max(0, dueAt - UtcNow() - MessagePauseMilliseconds));
     }
 
-    private static long? NextIncomingMessageAt(SqliteConnection connection, SqliteTransaction? transaction, string contactId) =>
+    private static long? NextIncomingMessageAt(SqliteConnection connection, SqliteTransaction? transaction, string contactId,
+        string? except = null) =>
         Scalar(connection, transaction, """
             SELECT MIN(due_at) FROM story_events
-            WHERE done = 0 AND CASE WHEN kind IN ($part, $reply)
+            WHERE done = 0 AND id IS NOT $except AND CASE WHEN kind IN ($part, $reply, $chat)
                 THEN json_extract(subject, '$.ContactId') END = $contact;
-            """, ("part", MessagePartEvent), ("reply", MessageReplyEvent), ("contact", contactId)) as long?;
+            """, ("part", MessagePartEvent), ("reply", MessageReplyEvent), ("chat", ChatFallbackEvent),
+            ("contact", contactId), ("except", except)) as long?;
 
     public IReadOnlyList<Conversation> GetConversations()
     {
@@ -69,12 +71,8 @@ public sealed partial class LocalSession
         while (reader.Read())
         {
             string id = reader.GetString(0);
-            var replies = !waitingForMessage && reader.IsDBNull(4) && _messages.TryGetValue(id, out var definition)
-                ? definition.Replies.Where(option => IsReplyAllowed(connection, transaction, definition, option) &&
-                    (!option.Independent || Scalar(connection, transaction, """
-                        SELECT 1 FROM independent_replies WHERE message_id = $message AND option_id = $option;
-                        """, ("message", id), ("option", option.Id)) == null))
-                    .Select(option => new ReplyOption(id, option.Id, option.Text, option.Silent)).ToArray()
+            var replies = !waitingForMessage && reader.IsDBNull(4)
+                ? AvailableReplies(connection, transaction, id).ToArray()
                 : [];
             messages.Add(new Message(id, contactId, reader.GetString(1), DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(2)),
                 reader.GetBoolean(3), attachments.GetValueOrDefault(id) ?? [], replies));
@@ -82,6 +80,20 @@ public sealed partial class LocalSession
         reader.Close();
         transaction.Commit();
         return messages;
+    }
+
+    private IEnumerable<ReplyOption> AvailableReplies(SqliteConnection connection, SqliteTransaction transaction, string id)
+    {
+        if (!_messages.TryGetValue(id, out var definition))
+            yield break;
+        foreach (var option in definition.Replies)
+        {
+            if (IsReplyAllowed(connection, transaction, definition, option) &&
+                (!option.Independent || Scalar(connection, transaction, """
+                    SELECT 1 FROM independent_replies WHERE message_id = $message AND option_id = $option;
+                    """, ("message", id), ("option", option.Id)) == null))
+                yield return new ReplyOption(id, option.Id, option.Text, option.Silent);
+        }
     }
 
     public bool SelectReply(string messageId, string optionId)
@@ -94,31 +106,34 @@ public sealed partial class LocalSession
         using var transaction = connection.BeginTransaction();
         var now = UtcNow();
         ProcessDue(connection, transaction, now);
+        bool selected = NextIncomingMessageAt(connection, transaction, message.ContactId) == null &&
+            TrySelectReply(connection, transaction, message, option, now, option.Text);
+        transaction.Commit();
+        return selected;
+    }
+
+    private bool TrySelectReply(SqliteConnection connection, SqliteTransaction transaction, IncomingDefinition message,
+        ReplyDefinition option, long now, string? outgoingText)
+    {
         var select = option.Independent ? """
             INSERT INTO independent_replies(message_id, option_id)
             SELECT id, $option FROM messages WHERE id = $message AND outgoing = 0
+                AND NOT EXISTS (SELECT 1 FROM selected_replies WHERE message_id = $message)
             ON CONFLICT(message_id, option_id) DO NOTHING;
             """ : """
             INSERT INTO selected_replies(message_id, option_id)
             SELECT id, $option FROM messages WHERE id = $message AND outgoing = 0
             ON CONFLICT(message_id) DO NOTHING;
             """;
-        if (NextIncomingMessageAt(connection, transaction, message.ContactId) != null ||
-            !IsReplyAllowed(connection, transaction, message, option) ||
-            Execute(connection, transaction, select, ("message", messageId), ("option", optionId)) == 0)
-        {
-            transaction.Commit();
+        if (!IsReplyAllowed(connection, transaction, message, option) ||
+            Execute(connection, transaction, select, ("message", message.Id), ("option", option.Id)) == 0)
             return false;
-        }
 
-        Execute(connection, transaction, "UPDATE messages SET is_read = 1 WHERE id = $id;", ("id", messageId));
+        Execute(connection, transaction, "UPDATE messages SET is_read = 1 WHERE id = $id;", ("id", message.Id));
 
-        if (!option.Silent)
-            Execute(connection, transaction, """
-                INSERT INTO messages(id, contact_id, text, sent_at, outgoing, is_read)
-                VALUES($id, $contact, $text, $sentAt, 1, 1);
-                """, ("id", Guid.NewGuid().ToString("D")), ("contact", message.ContactId),
-                ("text", option.Text), ("sentAt", now));
+        if (!option.Silent && outgoingText != null)
+            WriteOutgoingMessage(connection, transaction, Guid.NewGuid().ToString("D"), message.ContactId,
+                outgoingText, now);
 
         if (option.NextMessageId is string nextId)
         {
@@ -136,9 +151,15 @@ public sealed partial class LocalSession
         if (option.UnlockDeviceId is string deviceId)
             Execute(connection, transaction, "UPDATE devices SET available = 1 WHERE id = $id;", ("id", deviceId));
 
-        transaction.Commit();
         return true;
     }
+
+    private static void WriteOutgoingMessage(SqliteConnection connection, SqliteTransaction transaction, string id,
+        string contactId, string text, long now) =>
+        Execute(connection, transaction, """
+            INSERT INTO messages(id, contact_id, text, sent_at, outgoing, is_read)
+            VALUES($id, $contact, $text, $sentAt, 1, 1);
+            """, ("id", id), ("contact", contactId), ("text", text), ("sentAt", now));
 
     private void Deliver(SqliteConnection connection, SqliteTransaction transaction, IncomingDefinition message, long now,
         string? instanceId = null)

@@ -15,15 +15,17 @@ public sealed partial class LocalSession
     private readonly TimeProvider _clock;
     private readonly Random _random;
     private readonly IPhysicalDelivery? _delivery;
+    private readonly IDialogueProvider? _dialogue;
 
     public LocalSession(string databasePath, Scenario scenario, TimeProvider? clock = null, Random? random = null,
-        IPhysicalDelivery? delivery = null)
+        IPhysicalDelivery? delivery = null, IDialogueProvider? dialogue = null)
     {
         _database = new SessionDatabase(databasePath);
         _scenario = scenario;
         _clock = clock ?? TimeProvider.System;
         _random = random ?? Random.Shared;
         _delivery = delivery;
+        _dialogue = dialogue;
         _contacts = scenario.Contacts.ToDictionary(contact => contact.Id, StringComparer.Ordinal);
         _messages = scenario.Messages.ToDictionary(message => message.Id, StringComparer.Ordinal);
         _devices = scenario.Devices.ToDictionary(device => device.Id, StringComparer.Ordinal);

@@ -46,8 +46,8 @@ namespace Adventure
                 Console.WriteLine(FoxNetLogo);
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("Произведено переключение на язык носителя.");
-                Console.WriteLine("Вас приветствует Система Дальней Связи компании FoxNet.");
-                Console.WriteLine("Вы желаете подключиться к последнему выбранному планетарному объекту?");
+                Console.WriteLine("Вас приветствует система дальней связи FOXNET.");
+                Console.WriteLine("Подключиться к спутнику N910VT?");
                 Console.WriteLine("y/n: ");
                 key = Console.ReadKey();
                 if (key.Key.ToString() == "Y")

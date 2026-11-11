@@ -34,7 +34,9 @@ public sealed partial class LocalSession
         using var connection = _database.Open();
         using var transaction = connection.BeginTransaction(deferred: true);
         using var query = Command(connection, transaction, """
-            SELECT id, appraisal FROM registered_values WHERE document_id = $id AND owned = 1;
+            SELECT r.id, r.appraisal FROM registered_values r
+            WHERE r.document_id = $id AND r.owned = 1
+                AND NOT EXISTS (SELECT 1 FROM evidence_publications p WHERE p.value_id = r.id);
             """, ("id", documentId));
         using var reader = query.ExecuteReader();
         if (!reader.Read())
@@ -95,6 +97,9 @@ public sealed partial class LocalSession
                 : new TradeResult(TradeError.IdConflict);
         if (FindSale(connection, transaction, "value_id = $value AND buyer_id = $buyer",
                 ("value", valueId), ("buyer", buyerId)) != null)
+            return new TradeResult(TradeError.AlreadyTransferred);
+        if (Scalar(connection, transaction, "SELECT 1 FROM evidence_publications WHERE value_id = $id;",
+                ("id", valueId)) != null)
             return new TradeResult(TradeError.AlreadyTransferred);
 
         var buyer = _contacts.GetValueOrDefault(buyerId)?.Details;

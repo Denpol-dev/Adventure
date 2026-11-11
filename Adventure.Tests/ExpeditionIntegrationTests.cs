@@ -39,6 +39,7 @@ public sealed class ExpeditionIntegrationTests
                 DROP TABLE corporate_pressure;
                 DROP TABLE world_settings;
                 DROP TABLE notifications;
+                DROP TABLE npc_dialogue;
                 DROP TABLE npc_observations;
                 DROP TABLE evidence_publications;
                 DROP TABLE orbital_cargo;
@@ -137,7 +138,7 @@ public sealed class ExpeditionIntegrationTests
             Assert.That(Attempt(FlightAction.OperateTerminal, "reserve-array", "relay-live").Applied, Is.False);
             Command(FlightAction.ReadTerminalFile, "reserve-array", "relay-fault");
             Command(FlightAction.OperateTerminal, "reserve-array", "relay-diagnose");
-            Command(FlightAction.OperateTerminal, "reserve-array", "relay-jumper");
+            Command(FlightAction.UseTool, slot: nameof(EquipmentSlot.LeftArm));
             Command(FlightAction.OperateTerminal, "reserve-array", "relay-live");
             Assert.That(Attempt(FlightAction.OperateTerminal, "reserve-array", "relay-live").Applied, Is.False);
 
@@ -154,7 +155,7 @@ public sealed class ExpeditionIntegrationTests
             Assert.That(desktop.GetOrbitalOffers(), Is.Empty);
             Command(FlightAction.ReadTerminalFile, "space-elevator", "lift-fault");
             Command(FlightAction.OperateTerminal, "space-elevator", "lift-diagnose");
-            Command(FlightAction.OperateTerminal, "space-elevator", "lift-unlock");
+            Command(FlightAction.UseTool, slot: nameof(EquipmentSlot.RightArm));
             Command(FlightAction.OperateTerminal, "space-elevator", "lift-live");
             Command(FlightAction.DispatchCargo, "space-elevator", "DN-01-02");
             Assert.That(owner.Read(engine => engine.ActiveDrone.Cargo.Any(item => item.Id == "DN-01-02")), Is.False);
@@ -187,6 +188,7 @@ public sealed class ExpeditionIntegrationTests
         reopened.EnterWorkspace();
         reopened.AdvanceWorld();
         Assert.That(reopened.GetPublication(evidenceId)!.Status, Is.EqualTo(PublicationStatus.Published));
+        Assert.That(reopened.GetDocumentOffer(evidenceId), Is.Null);
         Assert.That(reopened.GetSecurityHypothesis(), Is.EqualTo(SecurityHypothesis.JournalistIsOperator));
         Assert.That(reopened.OpenConversation("security").SelectMany(message => message.Attachments), Is.Empty);
         Assert.That(reopened.OpenConversation("journalist").Sum(message => message.Attachments.Count), Is.EqualTo(2));

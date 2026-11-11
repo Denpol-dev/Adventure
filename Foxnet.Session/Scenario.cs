@@ -63,6 +63,10 @@ public sealed record Scenario(
             throw new InvalidDataException("Некорректные параметры вступления FOXNET.");
 
         if (Contacts.Any(contact => string.IsNullOrWhiteSpace(contact.Nickname)) ||
+            Contacts.Any(contact => contact.Details?.Dialogue is { } dialogue &&
+                (dialogue.WarningsBeforeBlock < 2 || string.IsNullOrWhiteSpace(dialogue.Character) ||
+                    string.IsNullOrWhiteSpace(dialogue.Reply) || string.IsNullOrWhiteSpace(dialogue.Warning) ||
+                    string.IsNullOrWhiteSpace(dialogue.Block))) ||
             Devices.Any(device => string.IsNullOrWhiteSpace(device.Name) || string.IsNullOrWhiteSpace(device.Kind) ||
                 device.Credentials == null || string.IsNullOrWhiteSpace(device.Credentials.Login) ||
                 string.IsNullOrWhiteSpace(device.Credentials.Password)))
@@ -108,7 +112,8 @@ public sealed record Scenario(
 public sealed record ContactDefinition(string Id, string Nickname, NpcDefinition? Details = null);
 public sealed record NpcDefinition(string? Name, int? Age, string? Organization, string Summary, string? Avatar,
     long InitialBalance, long CreditsPerMinute, long RequestLimit, ValueKind? ValueKind, int ResaleMin, int ResaleMax,
-    int MaxPaidRequests = 1);
+    int MaxPaidRequests = 1, DialoguePersona? Dialogue = null);
+public sealed record DialoguePersona(string Character, string Reply, string Warning, string Block, int WarningsBeforeBlock);
 public sealed record IntroductionDefinition(int ReminderMinutes, int DeferralMinutes, int JournalistMinutes,
     int IvanMinutes, int SecurityMinutes, int RequestDecisionMinutes, int RequestExpiryMinutes, int RequestCooldownMinutes);
 public sealed record DeviceDefinition(string Id, string Name, string Kind, bool InitiallyAvailable, Credentials Credentials);

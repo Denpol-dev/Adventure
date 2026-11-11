@@ -77,7 +77,7 @@ public sealed partial class ShellViewModel(string databasePath, string dataDirec
         {
             var (session, signInState) = await Task.Run(() =>
             {
-                var store = new LocalSession(databasePath, Scenario.LoadDefault());
+                var store = new LocalSession(databasePath, Scenario.LoadDefault(), dialogue: OllamaDialogueProvider.FromEnvironment());
                 store.Initialize();
                 return (store, store.GetSignInState());
             });

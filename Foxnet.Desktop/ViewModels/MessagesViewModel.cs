@@ -13,11 +13,13 @@ public sealed partial class MessagesViewModel : ScreenViewModel
     private readonly Action<string> _openDossier;
     private readonly Func<bool> _isVisible;
     private readonly DispatcherTimer _typingTimer = new();
+    private readonly Dictionary<string, string> _drafts = [];
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSelection))] private ConversationRow? _selected;
     [ObservableProperty] private IReadOnlyList<MessageRow> _messages = [];
     [ObservableProperty] private bool _isTyping;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasReplies))] private IReadOnlyList<ReplyOption> _replies = [];
+    [ObservableProperty] private string _draft = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ShowReplyOptions))] private IReadOnlyList<ReplyOption> _replies = [];
 
     public MessagesViewModel(LocalSession session, Action<string> openDocument, Action<string> openDossier, Func<bool> isVisible)
     {
@@ -32,7 +34,14 @@ public sealed partial class MessagesViewModel : ScreenViewModel
     public ObservableCollection<ConversationRow> Conversations { get; } = [];
     public bool IsEmpty => Conversations.Count == 0;
     public bool HasSelection => Selected != null;
-    public bool HasReplies => Replies.Count != 0;
+    public bool ShowReplyOptions => !_session.HasDialogueProvider && Replies.Count != 0;
+    public string DialogueMode => _session.HasDialogueProvider ? "Диалог с моделью · Ollama" : "Сценарный диалог";
+
+    partial void OnSelectedChanging(ConversationRow? oldValue, ConversationRow? newValue)
+    {
+        if (oldValue != null)
+            _drafts[oldValue.Id] = Draft;
+    }
 
     partial void OnSelectedChanged(ConversationRow? value)
     {
@@ -40,9 +49,38 @@ public sealed partial class MessagesViewModel : ScreenViewModel
         Replies = [];
         _typingTimer.Stop();
         IsTyping = false;
+        Draft = value == null ? "" : _drafts.GetValueOrDefault(value.Id, "");
         if (value != null)
             Run(() => RefreshThread(markRead: _isVisible()));
     }
+
+    [RelayCommand]
+    private Task SendChatAsync() => RunAsync(async () =>
+    {
+        if (Selected is not { } selected)
+            return;
+        string text = Draft;
+        var sending = _session.SendChatAsync(selected.Id, text);
+        if (!sending.IsCompleted)
+            RefreshThread(markRead: true);
+        var result = await sending;
+        bool sent = result is ChatResult.Scripted or ChatResult.Generated or ChatResult.ProviderUnavailable;
+        if (sent && _drafts.GetValueOrDefault(selected.Id) == text)
+            _drafts.Remove(selected.Id);
+        if (Selected?.Id != selected.Id)
+            return;
+        if (sent && Draft == text)
+            Draft = "";
+        RefreshThread(markRead: _isVisible());
+        Notice = result switch
+        {
+            ChatResult.Scripted or ChatResult.Generated => "Сообщение отправлено.",
+            ChatResult.ProviderUnavailable => "Использован сценарный ответ.",
+            ChatResult.WaitingForReply => "Дождитесь предыдущего ответа.",
+            ChatResult.Invalid => "Введите сообщение длиной до 1200 символов.",
+            _ => "Контакт недоступен для переписки."
+        };
+    });
 
     public void OpenContact(string id) => Selected = Conversations.FirstOrDefault(row => row.Id == id);
 

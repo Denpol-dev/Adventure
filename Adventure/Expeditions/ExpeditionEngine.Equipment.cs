@@ -89,6 +89,15 @@ public sealed partial class ExpeditionEngine
         if (State.Mode == ControlMode.Laser || !TrySlot(slotName, out var slot) ||
             !drone.Slots.TryGetValue(slot, out var tool) || tool.Kind is not (EquipmentKind.Gripper or EquipmentKind.Hammer))
             return Reject("Инструмент не установлен или недоступен.");
+        foreach (var placed in _map.CellAt(drone.Position).Objects)
+        {
+            if (!TryTerminal(placed.Id, out _, out var system))
+                continue;
+            var operation = (system.Operations ?? []).FirstOrDefault(operation =>
+                (operation.RequiresEquipment ?? []).Contains(tool.Kind) && OperationBlock(placed.Id, system, operation) == null);
+            if (operation != null)
+                return OperateTerminal(placed.Id, operation.Id);
+        }
         if (!Spend(drone, Definition.Balance.ToolUse))
             return Reject("Недостаточно энергии для инструмента.");
         return Accept($"Активирован инструмент: {Equipment.Name(tool.Kind)}.");
